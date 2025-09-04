@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>簡単MVCアプリ（Python Flask）</title>
+</head>
+<body>
+    <h1>メッセージ一覧</h1>
+    <ul>
+        {% for msg in messages %}
+            <li>{{ msg.text }}</li>
+        {% endfor %}
+    </ul>
+    <form action="/add" method="post">
+        <input type="text" name="message" required>
+        <button type="submit">追加</button>
+    </form>
+</body>
+</html>
