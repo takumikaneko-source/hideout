@@ -9,7 +9,7 @@ class Message:
 
 messages = []
 
-# Controller & View
+# Controller & View コメント追加
 @app.route('/')
 def index():
     return render_template('index.html', messages=messages)
