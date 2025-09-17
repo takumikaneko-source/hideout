@@ -10,6 +10,7 @@ class Message:
 messages = []
 
 # --- testtesttest--------------------------
+# test2
 # Controller & View
 @app.route('/')
 def index():
