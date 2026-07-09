@@ -1,0 +1,210 @@
+SQLクエリ検証手順
+========================================
+
+⓪KDDI資料の確認
+
+①テストデータの確認
+
+②単純SUM項目の確認
+	結合条件が問題ないことを確認したいため、日別,乗務員別それぞれ検証
+
+③複雑なセレクト項目の確認
+	日別_検証SQL
+	乗務員別_検証SQL
+		それぞれ画面表示しながらKDDI資料の通りに計算式が実装されていることを確認
+
+2. 四則演算・計算
+========================================
+- 目標達成率[％] (round(sum(uf.soeisyu) / eigyosyo_target_date * 100, 2))
+- 売上/時間[円] (round(sum(uf.soeisyu) / sum(abs(timestampdiff(minute, nyuko_dtm, syukko_dtm))/60)))
+- 実車率[％] (round(sum(sa_eigyosoko_km) / sum(uf.sa_zensoko_km) * 100, 2))
+- 乗務時間[分] (sum(abs(timestampdiff(minute, uf.nyuko_dtm, uf.syukko_dtm))/60))
+- 固定迎車ｷｬﾝｾﾙ料金(差引)[円] (sum(uf.sa_geicancel_kin) * 10)
+- キロ当たり収入[円] (round(sum(uf.zeinuki_soeisyu) / sum(uf.sa_zensoko_km)))
+- 実車キロ当たり収入[円] (round(sum(uf.zeinuki_soeisyu) / sum(uf.sa_eigyosoko_km)))
+
+3. 率・平均の計算
+========================================
+- 目標達成率[％] (ROUND((SUM(uf.soeisyu) / NULLIF(MAX(uf.jomuin_target_month), 0)) * 100, 2))
+- 売上/時間[円] (ROUND(SUM(uf.soeisyu) / NULLIF(SUM(ABS(TIMESTAMPDIFF(MINUTE, uf.nyuko_dtm, uf.syukko_dtm))) / 60, 0)))
+- 乗務時間[分] (ROUND(SUM(uf.eigyohyoka_pt) / NULLIF(SUM(uf.unko_cnt), 0), 2))
+- 実車率[％] (ROUND(SUM(uf.sa_eigyosoko_km) / NULLIF(SUM(uf.sa_zensoko_km), 0) * 100, 2))
+- キロ当たり収入[円] (ROUND(SUM(uf.zeinuki_soeisyu) / NULLIF(SUM(uf.sa_zensoko_km), 0), 2))
+- 実車キロ当たり収入[円] (ROUND(SUM(uf.zeinuki_soeisyu) / NULLIF(SUM(uf.sa_eigyosoko_km), 0), 2))
+- 前月比（目標達成率）[ポイント]
+
+
+
+----------------------------------------
+以上
+
+
+round(sum(uf.sa_eigyosoko_km) / sum(uf.sa_zensoko_km) * 100, 2)
+round(sum(uf.sa_eigyosoko_km) / sum(uf.sa_zensoko_km) * 100, 2)
+
+
+
+
+
+
+
+
+日別
+1. 単純集計
+========================================
+- 売上[円] (sum(uf.soeisyu))
+- 現収[円] (sum(uf.unko_gensyu))
+- 未収[円] (sum(uf.unko_misyu))
+- 税金[円] (sum(uf.tax))
+- 営業回数[回] (sum(sa_eigyo_cnt))
+- 乗務人数[人] (count(distinct uf.jomuin_cd))
+- 労働時間[分] (sum(uf.roudou_tm_h))
+- 休憩時間[分] (sum(uf.kyukei_tm))
+- 空車停止時間[分] (sum(uf.kusyateisi_tm))
+- 累計ハンドル時間(差引)[分] (sum(uf.sa_rui_handle_tm))
+- 全走行時間(差引)[分] (sum(uf.sa_zensoko_tm))
+- 営業走行時間(差引)[分] (sum(uf.sa_eigyo_soko_tm))
+- 営業時間(差引)[分] (sum(uf.sa_eigyo_tm))
+- 乗務距離[km] (sum(uf.jomu_km))
+- 営業走行距離(差引)[km] (sum(uf.sa_eigyosoko_km))
+- 全走行距離(差引)[km] (sum(uf.sa_zensoko_km))
+- 空転距離(差引)[km] (sum(uf.sa_kuuten_km))
+- 迎車距離(差引)[km] (sum(uf.sa_geisya_km))
+- ETC料金(合計)[円] (sum(uf.unko_etc_ryokin))
+- ETC料金(空車)[円] (sum(uf.etc_kusya_ryokin))
+- ETC料金(実車)[円] (sum(uf.etc_zisya_ryokin))
+- ETC料金(迎車)[円] (sum(uf.etc_geisya_ryokin))
+- 立替金合計[円] (sum(uf.total_tatekae_kin))
+- 基本料金合計[円] (sum(uf.total_kihon_kin))
+- 爾後料金合計[円] (sum(uf.total_zigo_kin))
+- 迎車料金合計[円] (sum(uf.total_geisya_kin))
+- 置換料金合計[円] (sum(uf.total_okikae_kin_flg))
+- 定額料金合計[円] (sum(uf.total_teigaku_kin))
+- 立替(高速)合計[円] (sum(uf.tatekae_kousoku))
+- 立替(駐車)合計[円] (sum(uf.tatekae_chusya))
+- 立替(その他)合計[円] (sum(uf.tatekae_sonota))
+- 立替金以外の合計金額(総営収)[円] (sum(uf.total_kin))
+- Aタリフ金額(差引)[円] ～ Lタリフ金額(差引)[円] (sum(uf.sa_tarifu_a_kin) ～ sum(uf.sa_tarifu_l_kin))
+- Aタリフ金額(差引)[円] ～ Yタリフ金額(差引)[円] (タリフ回数) (sum(uf.sa_tarifu_a_cnt) ～ sum(uf.sa_tarifu_y_cnt))
+- 後続回数1～3(差引)[回] (sum(uf.sa_zigo1_cnt) ～ sum(uf.sa_zigo3_cnt))
+- 固定迎車ｷｬﾝｾﾙ回数(差引)[回] (sum(uf.sa_geicancel_cnt))
+- バック回数(差引)[回] (sum(uf.sa_back_cnt))
+- 男性人員[人] (sum(uf.unko_man_jinin))
+- 女性人員[人] (sum(uf.unko_woman_jinin))
+
+2. 四則演算・計算
+========================================
+- 目標達成率[％] (round(sum(uf.soeisyu) / eigyosyo_target_date * 100, 2))
+- 売上/時間[円] (round(sum(uf.soeisyu) / sum(abs(timestampdiff(minute, nyuko_dtm, syukko_dtm))/60)))
+- 実車率[％] (round(sum(sa_eigyosoko_km) / sum(uf.sa_zensoko_km) * 100, 2))
+- 乗務時間[分] (sum(abs(timestampdiff(minute, uf.nyuko_dtm, uf.syukko_dtm))/60))
+- 固定迎車ｷｬﾝｾﾙ料金(差引)[円] (sum(uf.sa_geicancel_kin) * 10)
+- キロ当たり収入[円] (round(sum(uf.zeinuki_soeisyu) / sum(uf.sa_zensoko_km)))
+- 実車キロ当たり収入[円] (round(sum(uf.zeinuki_soeisyu) / sum(uf.sa_eigyosoko_km)))
+
+3. eigyo_flatテーブルからの結合項目
+========================================
+- 迎車回数[回] (sum(eft.geisya_cnt))
+
+4. 直接指定・未設定項目
+========================================
+- 日付 ('')
+- 目標[円] (eigyosyo_target_date)
+
+
+乗務員別
+1. 結合・編集項目
+========================================
+- 区分 (CONCAT(km.kbn_cd, ':', km.kbn_nm))
+- 勤務形態 (CONCAT(uf.kinmu_cd, ':',uf.kinmu))
+- 乗務員コード (uf.jomuin_cd)
+- 指名 (jm.jomuin_nm)
+- 迎車回数（差引）[回] (SUM(efg.geisya_cnt))
+
+2. 単純集計
+========================================
+- 目標[円] (MAX(uf.jomuin_target_month))
+- 売上[円] (SUM(uf.soeisyu))
+- 現収[円] (SUM(uf.unko_gensyu))
+- 未収[円] (SUM(uf.unko_misyu))
+- 税金[円] (SUM(uf.tax))
+- 乗務日数[日] (COUNT(DISTINCT uf.sales_date))
+- 営業評価点数[点] (ROUND(AVG(uf.eigyohyoka_pt), 2))
+- 労働時間[分] (SUM(uf.roudou_tm_h))
+- 休憩時間[分] (SUM(uf.kyukei_tm))
+- 空車停止時間[分] (SUM(uf.kusyateisi_tm))
+- 累計ハンドル時間(差引)[分] (SUM(uf.sa_rui_handle_tm))
+- 全走行時間(差引)[分] (SUM(uf.sa_zensoko_tm))
+- 営業走行時間(差引)[分] (SUM(uf.sa_eigyo_soko_tm))
+- 営業時間(差引)[分] (SUM(uf.sa_eigyo_tm))
+- 乗務距離[km] (SUM(uf.jomu_km))
+- 営業走行距離(差引)[km] (SUM(uf.sa_eigyosoko_km))
+- 全走行距離(差引)[km] (SUM(uf.sa_zensoko_km))
+- 空転距離(差引)[km] (SUM(uf.sa_kuuten_km))
+- 迎車距離(差引)[km] (SUM(uf.sa_geisya_km))
+- ETC料金(合計)[円] (SUM(uf.unko_etc_ryokin))
+- ETC料金(空車)[円] (SUM(uf.etc_kusya_ryokin))
+- ETC料金(実車)[円] (SUM(uf.etc_zisya_ryokin))
+- ETC料金(迎車)[円] (SUM(uf.etc_geisya_ryokin))
+- 立替金合計[円] (SUM(uf.total_tatekae_kin))
+- 基本料金合計[円] (SUM(uf.total_kihon_kin))
+- 爾後料金合計[円] (SUM(uf.total_zigo_kin))
+- 迎車料金合計[円] (SUM(uf.total_geisya_kin))
+- 置換料金合計[円] (SUM(uf.total_okikae_kin))
+- 定額料金合計[円] (SUM(uf.total_teigaku_kin))
+- 立替(高速)合計[円] (SUM(uf.tatekae_kousoku))
+- 立替(駐車)合計[円] (SUM(uf.tatekae_chusya))
+- 立替(その他)合計[円] (SUM(uf.tatekae_sonota))
+- 立替金以外の合計金額(総営収)[円] (SUM(uf.total_kin))
+- Aタリフ金額（差引）[円] ～ Lタリフ金額（差引）[円] (SUM(uf.sa_tarifu_a_kin) ～ SUM(uf.sa_tarifu_l_kin))
+- 営業回数（差引）[回] (SUM(uf.sa_eigyo_cnt))
+- 爾後回数1（差引）[回] (SUM(uf.sa_zigo1_cnt))
+- 爾後回数2（差引）[回] (SUM(uf.sa_zigo2_cnt))
+- 爾後回数3（差引）[回] (SUM(uf.sa_zigo3_cnt))
+- 固定迎車ｷｬﾝｾﾙ回数（差引）[回] (SUM(uf.sa_geicancel_cnt))
+- バック回数（差引）[回] (SUM(uf.sa_back_cnt))
+- Aタリフ回数（差引）[回] ～ Yタリフ回数（差引）[回] (SUM(uf.sa_tarifu_a_cnt) ～ SUM(uf.sa_tarifu_y_cnt))
+- 男性人員[人] (SUM(uf.unko_man_jinin))
+- 女性人員[人] (SUM(uf.unko_woman_jinin))
+
+3. 率・平均の計算
+========================================
+- 目標達成率[％] (ROUND((SUM(uf.soeisyu) / NULLIF(MAX(uf.jomuin_target_month), 0)) * 100, 2))
+- 売上/時間[円] (ROUND(SUM(uf.soeisyu) / NULLIF(SUM(ABS(TIMESTAMPDIFF(MINUTE, uf.nyuko_dtm, uf.syukko_dtm))) / 60, 0)))
+- 乗務時間[分] (ROUND(SUM(uf.eigyohyoka_pt) / NULLIF(SUM(uf.unko_cnt), 0), 2))
+- 実車率[％] (ROUND(SUM(uf.sa_eigyosoko_km) / NULLIF(SUM(uf.sa_zensoko_km), 0) * 100, 2))
+- キロ当たり収入[円] (ROUND(SUM(uf.zeinuki_soeisyu) / NULLIF(SUM(uf.sa_zensoko_km), 0), 2))
+- 実車キロ当たり収入[円] (ROUND(SUM(uf.zeinuki_soeisyu) / NULLIF(SUM(uf.sa_eigyosoko_km), 0), 2))
+- 前月比（目標達成率）[ポイント]
+
+
+
+スナップショットの反映
+日別と乗務員別でのwith句差を埋める
+
+,ROUND((SUM(soeisyu) / NULLIF(MAX(jomuin_target_month), 0)) * 100, 2) AS prev_achievement_rate
+	→乗務員別の、with句のこちらのカラムにもifnull適用する
+
+sales_month = DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(@month, '/01'), '%Y/%m/%d'), INTERVAL 1 MONTH), '%Y/%m')
+	→正しい書き方なのか確認する
+
+勤務コード,区分コード
+	→結合条件を確認する。実装にあるか？
+
+CSV No1
+乗務員の出力APIを確認
+
+勤務マスタの結合追加
+
+画面SQLを追って、勤務コード:勤務コード名の出力方法を確認する
+
+LEFT OUTER JOIN
+	taxicloud.jomuin_mst jm
+		ON  
+			uf.cstm_cd = jm.cstm_cd
+		AND 
+			uf.eigyosyo_cd = jm.eigyosyo_cd
+		AND 
+			uf.jomuin_cd = jm.jomuin_cd
+
+月次目標金額のMAXはつけたままでよいか

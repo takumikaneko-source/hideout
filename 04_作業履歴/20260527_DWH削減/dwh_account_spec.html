@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DWH アカウント (buster) 仕様</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "default", flowchart: { htmlLabels: true, curve: "step" } });
+</script>
+<style>
+  body { font-family: "Noto Sans JP", system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; }
+  h1,h2,h3,h4,h5 { scroll-margin-top: 5rem; }
+  .doc h2 { border-bottom: 2px solid #2563eb; padding-bottom: 6px; margin-top: 2.5rem; }
+  .doc h3 { border-left: 4px solid #60a5fa; padding-left: 10px; margin-top: 1.75rem; color: #1e3a8a; }
+  .doc h4 { color: #1e40af; margin-top: 1.25rem; font-weight: 700; }
+  .doc h5 { color: #312e81; margin-top: 1rem; font-weight: 600; font-size: 0.95rem; }
+  .doc table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+  .doc table th, .doc table td { border: 1px solid #e2e8f0; padding: 7px 10px; vertical-align: top; text-align: left; }
+  .doc table thead th { background: #f1f5f9; color: #334155; font-weight: 600; }
+  .doc table tbody tr:nth-child(even) { background: #f8fafc; }
+  .doc ul { list-style: disc; padding-left: 1.25rem; }
+  .doc ul ul { list-style: circle; }
+  .doc p { margin: .5rem 0; }
+  .doc code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: .85em; color: #be123c; }
+  .doc pre { background: #0f172a; color: #e2e8f0; padding: 12px 16px; border-radius: 8px; overflow-x: auto; font-size: .8rem; line-height: 1.55; }
+  .doc pre code { background: transparent; color: inherit; padding: 0; }
+  .toc a { color: #1d4ed8; }
+  .toc a:hover { text-decoration: underline; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.75rem; font-weight:600; }
+  .batch-card { border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-top: 16px; background: #fff; }
+  .batch-card h4 { margin-top: 0; color: #0f172a; }
+  .batch-no { display: inline-block; background: #1d4ed8; color: white; padding: 2px 10px; border-radius: 999px; font-size: .75rem; margin-right: .5rem; }
+  .table-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-top: 10px; background: #fafafa; font-size: .8rem; }
+  .table-card h5 { margin-top: 0; color: #312e81; }
+  .callout-warn { background:#fef3c7; border-left:4px solid #d97706; padding:10px 14px; color:#78350f; font-size:.85rem; border-radius:4px; }
+  .callout-info { background:#dbeafe; border-left:4px solid #2563eb; padding:10px 14px; color:#1e3a8a; font-size:.85rem; border-radius:4px; }
+  .callout-rose { background:#fee2e2; border-left:4px solid #dc2626; padding:10px 14px; color:#7f1d1d; font-size:.85rem; border-radius:4px; }
+  .mermaid { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; }
+  .checklist li { list-style: none; padding-left: 0; }
+  .checklist li::before { content: "☐ "; color: #475569; font-weight: bold; }
+  .category-section { background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px 14px; margin-top: 12px; }
+  .category-section h4 { color: #3730a3; margin-top: 0; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<header class="bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-700 text-white">
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <p class="text-xs uppercase tracking-widest text-blue-200">TAXI-Cloud / 解析後データ ETL + DWH ホスト</p>
+    <h1 class="text-3xl sm:text-4xl font-bold mt-1">DWH アカウント (<code class="bg-white/20 px-2 py-0.5 rounded">buster</code>) 仕様</h1>
+    <div class="mt-3 flex flex-wrap gap-2 text-xs">
+      <span class="badge bg-white/15">Redshift Serverless</span>
+      <span class="badge bg-white/15">Lambda × 6 本</span>
+      <span class="badge bg-white/15">テーブル 56 本</span>
+      <span class="badge bg-white/15">TX = トランザクション</span>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-[230px_1fr] gap-8">
+  <aside class="hidden lg:block">
+    <div class="sticky top-4 toc text-sm">
+      <p class="font-semibold text-slate-700 mb-2">目次</p>
+      <ol class="space-y-1 list-decimal list-inside">
+        <li><a href="#sec-1">アカウント内のインフラ構成</a></li>
+        <li><a href="#sec-2">AWS リソース</a></li>
+        <li><a href="#sec-3">バッチ仕様 (6 本)</a></li>
+        <li><a href="#sec-4">DB (DWH) 仕様</a>
+          <ul class="pl-3 mt-1 space-y-0.5 text-xs">
+            <li><a href="#sec-4-2">テーブル分類</a></li>
+            <li><a href="#sec-4-4">全 56 テーブル定義</a></li>
+            <li><a href="#sec-4-5">保持サイクル (TTL 実態)</a></li>
+            <li><a href="#sec-4-6">暗号化</a></li>
+          </ul>
+        </li>
+        <li><a href="#sec-5">料金削減施策</a></li>
+      </ol>
+    </div>
+  </aside>
+
+  <main class="doc bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
+
+    <div class="callout-info">
+      対象: TAXI-Cloud 解析後データ ETL + DWH (Redshift Serverless) ホストアカウント。<br/>
+      出典: <code>taxi-cloud/backend/buster/**</code> / <code>taxi-cloud/ddl/redshift/taxicloud/**</code> 全件。本資料の保持期間／TTL／ライフサイクル記述は **ソースコード／IaC からの事実ベース** に基づく。
+    </div>
+
+    <!-- ================= Section 1 ================= -->
+    <section id="sec-1">
+      <h2 class="text-2xl font-bold">1. アカウント内のインフラ構成</h2>
+
+      <h3>1-1. 構成図</h3>
+      <div class="mermaid">
+flowchart LR
+    subgraph EXT["外部アカウント / 外部システム"]
+      STRIKE["strike アカウント<br/>(データ連携)"]
+      AEGIS["aegis アカウント<br/>(マスタメンテ)"]
+      DUEL["duel アカウント<br/>(動態 BI)"]
+    end
+
+    subgraph BUSTER["buster アカウント (DWH)"]
+      direction TB
+      subgraph INGRESS["取り込み層"]
+        S3IN["S3<br/>s3-link-dwh-json"]
+        SQS1["SQS<br/>link_dwh_data"]
+        SQS2["SQS<br/>data_collect"]
+      end
+      subgraph BATCH["バッチ層 (Lambda)"]
+        L1["①get_json_from_strike"]
+        L2["②export_dwh_data"]
+        L3["③export_dwh_redshift_data"]
+        L4["④sync_master_data"]
+        L5["⑤redshift_execute_status_manager"]
+        L6["⑥retry_redshift_query"]
+      end
+      subgraph DWH["DWH 層"]
+        RS["Redshift Serverless<br/>buster-*-redshift-wg<br/>(database: taxicloud)"]
+      end
+      subgraph META["運用メタ層"]
+        DDB1["DynamoDB<br/>redshift-execute-status"]
+        DDB2["DynamoDB<br/>batch-status / batch-log"]
+        DDB3["DynamoDB<br/>params"]
+        SM["Secrets Manager"]
+        CWL["CloudWatch Logs / Alarm"]
+        SNS["SNS<br/>backlog-topic"]
+      end
+    end
+
+    STRIKE -->|解析後 JSON 配置| S3IN
+    AEGIS  -->|マスタ CSV 配置| SQS2
+    S3IN -->|S3 イベント| SQS1
+    SQS1 --> L1 --> RS
+    SQS2 --> L4 --> RS
+    L2 -- "UNLOAD" --> RS
+    L3 -- "UNLOAD" --> RS
+    L2 --> DUEL
+    L3 --> AEGIS
+    L5 --- DDB1
+    L6 --- DDB1
+    L1 --- DDB2
+    L2 --- DDB2
+    L3 --- DDB2
+    BATCH --- SM
+    BATCH --- CWL
+    L1 --- SNS
+
+    classDef ext fill:#FEF3C7,stroke:#D97706,color:#78350F;
+    classDef self fill:#E0E7FF,stroke:#4338CA,color:#312E81;
+    class STRIKE,AEGIS,DUEL ext;
+    class S3IN,SQS1,SQS2,L1,L2,L3,L4,L5,L6,RS,DDB1,DDB2,DDB3,SM,CWL,SNS self;
+      </div>
+
+      <h3>1-2. アカウント概要</h3>
+      <table>
+        <tbody>
+          <tr><th class="w-1/3">論理アカウント名</th><td><code>buster</code></td></tr>
+          <tr><th>役割</th><td>解析後日報 JSON の受領 → DWH 取り込み → 各アカウントへの再配布 (UI 無し)</td></tr>
+          <tr><th>CloudFormation スタック</th><td><code>cloudformation-taxicloud-backend-buster-data-link-batch</code></td></tr>
+          <tr><th>リソース命名規則</th><td><code>taxi-cloud-buster-${EnvType}-*</code> / <code>buster-${EnvType}-*</code></td></tr>
+          <tr><th>環境 (<code>EnvType</code>)</th><td><code>dev</code> / <code>dev2</code> / <code>dev3</code> / <code>dev4</code> / <code>stg</code> / <code>prd</code></td></tr>
+          <tr><th>リージョン</th><td><code>ap-northeast-1</code> (東京)</td></tr>
+          <tr><th>ネットワーク</th><td>VPC 内 (Lambda は <code>subnet/protected_a_1</code> / <code>subnet/protected_c_1</code> で稼働)</td></tr>
+          <tr><th>Lambda 共通設定</th><td>Runtime <code>python3.13</code> / Arch <code>arm64</code> / Memory 512MB / Timeout 300s (関数毎に上書き)</td></tr>
+          <tr><th>アラーム通知</th><td>SNS (<code>AlarmSnsTopicArn</code>) → Backlog 連携 (<code>prd</code> / <code>stg</code> / <code>dev4</code> のみ有効)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= Section 2 ================= -->
+    <section id="sec-2">
+      <h2 class="text-2xl font-bold">2. アカウント内の AWS リソース</h2>
+
+      <h3>2-1. データストア</h3>
+      <table>
+        <thead><tr><th>種別</th><th>名称</th><th>用途</th><th>S3 ライフサイクルルール</th></tr></thead>
+        <tbody>
+          <tr><td><b>Redshift Serverless</b></td><td><code>buster-${EnvType}-redshift-wg</code></td><td>DWH 本体 (database: <code>taxicloud</code>)</td><td>— (S3 ではない)</td></tr>
+          <tr><td><b>S3</b></td><td><code>taxi-cloud-buster-${EnvType}-s3-link-dwh-json</code></td><td>解析後 JSON 受領 (strike→buster) ／ Redshift COPY 用 一時 CSV (<code>tmp/</code>)</td><td><b>本リポジトリ内に設定なし</b>。バケット定義自体が本スタック外 (別 IaC) のため要 AWS コンソール確認</td></tr>
+          <tr><td><b>S3</b></td><td><code>taxi-cloud-buster-${EnvType}-s3-msg-params-csv</code></td><td>パラメータ／メッセージマスタ CSV</td><td><b>本リポジトリ内に設定なし</b> (同上)</td></tr>
+          <tr><td><b>DynamoDB</b></td><td><code>buster-${EnvType}-dynamodb-batch-status</code></td><td>バッチ実行ステータス (<code>batch_id</code>)</td><td>— (S3 ではない)</td></tr>
+          <tr><td><b>DynamoDB</b></td><td><code>buster-${EnvType}-dynamodb-batch-log</code></td><td>バッチログ (<code>batch_id</code> + <code>process_start_datetime</code>)</td><td>— (S3 ではない)</td></tr>
+          <tr><td><b>DynamoDB</b></td><td><code>buster-${EnvType}-dynamodb-tmp-batch-log</code></td><td>バッチ一時ログ</td><td>— (S3 ではない)</td></tr>
+          <tr><td><b>DynamoDB</b></td><td><code>buster-${EnvType}-redshift-execute-status</code></td><td>Redshift 非同期クエリ実行ステータス (<code>execute_id</code>)</td><td>— (S3 ではない)</td></tr>
+          <tr><td><b>DynamoDB</b></td><td><code>buster-${EnvType}-dynamodb-params</code></td><td>パラメータマスタ (共通スタック)</td><td>— (S3 ではない)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout-warn mt-3">
+        <b>本リポジトリ内の S3 ライフサイクル実態調査結果</b>: <code>grep -rn "LifecycleConfiguration" backend</code> の結果、buster 配下では一切定義なし。リポジトリ全体でも以下 2 件のみ。
+        <ul class="mt-1">
+          <li><code>backend/blitz/api/template.yml</code>: ログ系バケットに <code>ExpirationInDays: 90</code></li>
+          <li><code>backend/duel/api/template.yml</code>: <code>taxi-cloud-duel-${EnvType}-s3-map-json</code> に <code>ExpirationInDays: 1</code></li>
+        </ul>
+        buster の S3 バケットの実態 (期限／無期限) は AWS コンソール または別 IaC リポジトリで確認する必要がある。
+      </div>
+
+      <h3>2-2. コンピュート (Lambda 6 本)</h3>
+      <table>
+        <thead><tr><th>関数名</th><th>トリガ</th><th>スケジュール</th></tr></thead>
+        <tbody>
+          <tr><td><code>buster-${EnvType}-get-json-from-strike</code></td><td>SQS</td><td>随時 (<code>link_dwh_data</code> 着信時)</td></tr>
+          <tr><td><code>buster-${EnvType}-export-dwh-data-function</code></td><td>EventBridge</td><td><code>cron(0/10 * * * ? *)</code> (10 分毎)</td></tr>
+          <tr><td><code>buster-${EnvType}-export-dwh-redshift-data-function</code></td><td>EventBridge</td><td><code>cron(0/10 * * * ? *)</code> (10 分毎)</td></tr>
+          <tr><td><code>buster-${EnvType}-sync-master-data-function</code></td><td>SQS</td><td>随時 (<code>data_collect</code> 着信時)</td></tr>
+          <tr><td><code>buster-${EnvType}-redshift-execute-status-manager-function</code></td><td>EventBridge</td><td><code>cron(0/5 * * * ? *)</code> (5 分毎)</td></tr>
+          <tr><td><code>buster-${EnvType}-retry-redshift-query-function</code></td><td>EventBridge</td><td><code>cron(0/60 * * * ? *)</code> (1 時間毎)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2-3. メッセージング・認証・監視</h3>
+      <table>
+        <thead><tr><th>種別</th><th>名称</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td>SQS</td><td><code>/buster/${EnvType}/sqs/link_dwh_data</code></td><td>S3 受領イベント (strike→buster)</td></tr>
+          <tr><td>SQS</td><td><code>/buster/${EnvType}/sqs/data_collect</code></td><td>マスタ CSV 連携 (aegis→buster)</td></tr>
+          <tr><td>SNS</td><td><code>taxi-cloud-backlog-topic</code></td><td>エラー通知 (Backlog 自動起票)</td></tr>
+          <tr><td>Secrets Manager</td><td><code>buster-${EnvType}-redshift-serverless-secrets</code></td><td>Redshift 接続情報</td></tr>
+          <tr><td>SSM Parameter Store</td><td><code>/buster/${EnvType}/iam/redshift_role/arn</code></td><td>Redshift が S3 を読み書きするロール</td></tr>
+          <tr><td>SSM Parameter Store</td><td><code>/buster/${EnvType}/iam/redshift_query_role/arn</code></td><td>Lambda が Redshift Data API を呼び出すロール</td></tr>
+          <tr><td>CloudWatch Logs</td><td><code>/aws/lambda/&lt;関数名&gt;</code></td><td>保持期間 <b>14 日</b></td></tr>
+          <tr><td>CloudWatch Alarm</td><td>各 Lambda の <code>[ERROR]</code> Metric Filter</td><td><code>prd</code>/<code>stg</code>/<code>dev4</code> でのみ有効化</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= Section 3 ================= -->
+    <section id="sec-3">
+      <h2 class="text-2xl font-bold">3. バッチ仕様 (6 本)</h2>
+      <p class="text-sm text-slate-600">処理概要 / 起動タイミング / 取得元 / 連携先 / 連携先アカウントでの利用処理 / 処理内容 / 実行 SQL を記載。</p>
+
+      <!-- Batch 1 -->
+      <div class="batch-card" id="batch-1">
+        <h4><span class="batch-no">バッチ ①</span>解析後日報 JSON 取り込み (<code>get_json_from_strike</code>)</h4>
+        <table>
+          <tbody>
+            <tr><th class="w-1/4">処理概要</th><td>strike アカウントから配信された <b>解析後日報 JSON ファイル</b> を、DWH (Redshift) に取り込む処理です。1 ファイル＝乗務員 1 日分の運行記録に相当します。</td></tr>
+            <tr><th>起動タイミング</th><td>S3 バケット <code>s3-link-dwh-json</code> に JSON が配置されると SQS イベントが発火し、本バッチが即時起動します。</td></tr>
+            <tr><th>取得元</th><td>S3: <code>taxi-cloud-buster-${EnvType}-s3-link-dwh-json</code> (strike が配置)</td></tr>
+            <tr><th>連携先</th><td>Redshift Serverless (database: <code>taxicloud</code> / schema: <code>public</code>) の各業務テーブル</td></tr>
+            <tr><th>処理内容</th><td>
+              <ol class="list-decimal list-inside space-y-1">
+                <li>SQS 経由で受け取った S3 オブジェクトキーから対象 JSON を取得</li>
+                <li>ファイル名形式を検証し、<code>data_key</code>(レコード一意キー) を生成</li>
+                <li>JSON 内容を Pydantic でスキーマバリデーション</li>
+                <li>JSON 内のセクション (共通 / 運行 / 入出庫 / 営業 / 決済 / ETC / イベント / 評価) ごとに分割し、対応する <b>約 30 テーブル</b> に登録</li>
+                <li>バリデーション失敗時は <b>日報ワークテーブル (<code>nippou_wk</code>)</b> にエラーフラグ付きで JSON 文字列のまま退避</li>
+                <li>取り込み成功後、元の S3 JSON を削除</li>
+              </ol>
+            </td></tr>
+            <tr><th>実行 SQL</th><td>
+              テーブル単位に「一時 CSV を S3 にアップ → Redshift <code>COPY</code> で一括投入」する方式
+<pre><code>COPY "taxicloud"."public"."unko"
+  (data_key, cdimg_id, isdegi_flg, ..., insert_datetime, insert_user_id, insert_business_id)
+FROM 's3://taxi-cloud-buster-${EnvType}-s3-link-dwh-json/tmp/{data_key}_{table}_{YYYYMMDDHHMMSS}.csv'
+IAM_ROLE 'arn:aws:iam::...:role/...redshift_role'
+FORMAT CSV
+REGION AS 'ap-northeast-1';</code></pre>
+              <p class="text-xs text-slate-500">※ Redshift Data API による非同期発行。<code>execute_id</code> を DynamoDB に登録し、バッチ⑤で完了判定。</p>
+            </td></tr>
+            <tr><th>エラー時挙動</th><td>スキーマ違反 / 重複キー違反などは <code>nippou_wk</code> に退避。DB エラー時は SQS リドライブで再試行。SNS 経由で Backlog 起票</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Batch 2 -->
+      <div class="batch-card" id="batch-2">
+        <h4><span class="batch-no">バッチ ②</span>DWH→duel 連携 (<code>export_dwh_data</code>)</h4>
+        <table>
+          <tbody>
+            <tr><th class="w-1/4">処理概要</th><td>DWH に蓄積された日報・運行データを、<b>動態 BI アカウント (duel)</b> の S3 に CSV で配信します。</td></tr>
+            <tr><th>起動タイミング</th><td>10 分毎 (<code>cron(0/10 * * * ? *)</code>)</td></tr>
+            <tr><th>取得元</th><td>Redshift Serverless <code>taxicloud</code> DB (対象テーブルは DynamoDB <code>params</code> で動的管理)</td></tr>
+            <tr><th>連携先</th><td>S3: <code>taxi-cloud-duel-${EnvType}-s3-link-dwh</code> (duel アカウント所有)</td></tr>
+            <tr><th>連携先アカウントでの利用処理</th><td>
+              <div class="callout-warn">
+                <b>duel アカウント側にこの CSV を取り込む Lambda は本リポジトリ内に存在しない。</b><br/>
+                duel 側で S3 (<code>s3-link-dwh</code>) を購読しているのは <code>LinkDailyJsonRule</code> (EventBridge) だが、フィルタが <code>object.key.suffix: .json</code> (JSON 限定) のため、本バッチが出力する CSV はトリガにならない。<br/>
+                CSV は duel の <b>ECS マートタスク (<code>duel-prd-ecs-bi</code>) または BI 側集計処理が S3 から直接読み込み、Aurora MySQL マートを更新している</b>と推測される。<br/>
+                <span class="text-xs">※本リポジトリの SAM テンプレートからは確認不可、ECS タスク定義／Step Functions ワークフロー側を要確認。</span>
+              </div>
+            </td></tr>
+            <tr><th>処理内容</th><td>
+              <ol class="list-decimal list-inside space-y-1">
+                <li>パラメータマスタから連携対象テーブル一覧を取得</li>
+                <li>各テーブルの「前回成功時刻＜更新／登録時刻＜今回最新時刻」の差分行のみを抽出</li>
+                <li>結果を Redshift <code>UNLOAD</code> で duel 側 S3 に CSV 出力</li>
+                <li>今回最新時刻を <code>batch-status</code> テーブルに保存し、次回の差分起点とする</li>
+              </ol>
+            </td></tr>
+            <tr><th>実行 SQL</th><td>
+<pre><code>-- 最新時刻取得
+SELECT MAX(insert_datetime), MAX(update_datetime) FROM &lt;table&gt;;
+
+-- UNLOAD で差分抽出 & 出力
+UNLOAD ('SELECT * FROM &lt;table&gt;
+  WHERE ((update_datetime IS NULL AND insert_datetime &lt;= ''&lt;最新&gt;'')
+      OR (update_datetime IS NOT NULL AND update_datetime &lt;= ''&lt;最新&gt;''))
+    AND ((update_datetime IS NULL AND insert_datetime &gt; ''&lt;前回&gt;'')
+      OR (update_datetime IS NOT NULL AND update_datetime &gt; ''&lt;前回&gt;''))')
+TO 's3://taxi-cloud-duel-${EnvType}-s3-link-dwh/&lt;table&gt;/&lt;YYYYMMDDHHMMSS&gt;.csv'
+IAM_ROLE 'arn:aws:iam::...:role/...redshift_role'
+FORMAT AS CSV HEADER ALLOWOVERWRITE PARALLEL OFF;</code></pre>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Batch 3 -->
+      <div class="batch-card" id="batch-3">
+        <h4><span class="batch-no">バッチ ③</span>DWH→aegis 連携 (<code>export_dwh_redshift_data</code>)</h4>
+        <table>
+          <tbody>
+            <tr><th class="w-1/4">処理概要</th><td>DWH の特定テーブル群を、<b>マスタメンテアカウント (aegis)</b> の S3 に CSV で配信します。</td></tr>
+            <tr><th>起動タイミング</th><td>10 分毎 (<code>cron(0/10 * * * ? *)</code>) <span class="text-xs text-amber-700">※「暫定」コメントあり</span></td></tr>
+            <tr><th>取得元</th><td>Redshift Serverless <code>taxicloud</code> DB (対象テーブルは DynamoDB <code>params</code> で動的管理)</td></tr>
+            <tr><th>連携先</th><td>S3: <code>taxi-cloud-aegis-${EnvType}-s3-link-dwh</code> (aegis アカウント所有)</td></tr>
+            <tr><th>連携先アカウントでの利用処理</th><td>
+              <div class="callout-info">
+                <b>aegis 側で <code>import_dwh_redshift_data</code> Lambda が SQS 経由で起動 → CSV を Aurora MySQL に Upsert で投入</b>する。<br/>
+                パス: <code>backend/aegis/data_link_batch/functions/import_dwh_redshift_data/import_dwh_redshift_data.py</code><br/>
+<pre><code>INSERT INTO &lt;table&gt; (col1, col2, ...) VALUES (:col1, :col2, ...) AS new
+ON DUPLICATE KEY UPDATE col1 = VALUES(col1), col2 = VALUES(col2), ...</code></pre>
+                取り込み完了後、aegis 側で元 S3 CSV を delete。aegis 側 Aurora MySQL の運行データテーブル群が、軌跡表示・乗務員日報など aegis 画面の参照ソースとなる。
+              </div>
+            </td></tr>
+            <tr><th>処理内容</th><td>②と同じ「差分 UNLOAD 方式」。配信先 S3 のみ aegis 側になる点が違い。連携対象テーブルもパラメータマスタで個別管理される。</td></tr>
+            <tr><th>実行 SQL (buster 側)</th><td>バッチ ② と同一構造の <code>UNLOAD</code> (出力先 S3 バケットのみ差し替え)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Batch 4 -->
+      <div class="batch-card" id="batch-4">
+        <h4><span class="batch-no">バッチ ④</span>マスタ取り込み (<code>sync_master_data</code>)</h4>
+        <table>
+          <tbody>
+            <tr><th class="w-1/4">処理概要</th><td>aegis が管理する <b>乗務員・営業所・車両・顧客などのマスタ CSV</b> を、DWH に取り込みます。</td></tr>
+            <tr><th>起動タイミング</th><td>aegis が連携用 S3 に CSV 配置 → S3 イベント → 本アカウントの SQS (<code>data_collect</code>) 着信時</td></tr>
+            <tr><th>取得元</th><td>S3 (CSV) ※ SQS メッセージ内の <code>bucket</code>/<code>key</code> から動的解決</td></tr>
+            <tr><th>連携先</th><td>Redshift Serverless <code>taxicloud</code> DB の対応マスタテーブル (<code>jomuin_mst</code> / <code>eigyosyo_mst</code> / <code>syaryo_mst</code> / <code>kokyaku_mst</code> / <code>client_mst</code> 等 約 20 テーブル)</td></tr>
+            <tr><th>処理内容</th><td>
+              <ol class="list-decimal list-inside space-y-1">
+                <li>SQS から S3 オブジェクトキーを取得</li>
+                <li>キー先頭ディレクトリ名 = テーブル名として採用 (例: <code>jomuin_mst/202605211200.csv</code> → <code>jomuin_mst</code>)</li>
+                <li>Redshift <code>COPY</code> で当該テーブルへ全件投入</li>
+                <li>クエリ ID を DynamoDB に登録し、バッチ⑤で完了判定</li>
+              </ol>
+            </td></tr>
+            <tr><th>実行 SQL</th><td>
+<pre><code>COPY "taxicloud"."public"."&lt;table_name&gt;"
+FROM 's3://&lt;bucket&gt;/&lt;key&gt;'
+IAM_ROLE 'arn:aws:iam::...:role/...redshift_role'
+FORMAT AS CSV
+DELIMITER ','
+REGION AS 'ap-northeast-1';</code></pre>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Batch 5 -->
+      <div class="batch-card" id="batch-5">
+        <h4><span class="batch-no">バッチ ⑤</span>Redshift クエリ実行ステータス管理 (<code>redshift_execute_status_manager</code>)</h4>
+        <table>
+          <tbody>
+            <tr><th class="w-1/4">処理概要</th><td>他バッチ (①②③④) が <b>非同期発行した Redshift クエリの完了状態を巡回監視</b> し、成功したクエリの一時 S3 ファイルを掃除します。</td></tr>
+            <tr><th>起動タイミング</th><td>5 分毎 (<code>cron(0/5 * * * ? *)</code>)</td></tr>
+            <tr><th>取得元</th><td>DynamoDB <code>redshift-execute-status</code> の全 <code>execute_id</code></td></tr>
+            <tr><th>連携先 (操作対象)</th><td>DynamoDB <code>redshift-execute-status</code> / S3 一時 CSV</td></tr>
+            <tr><th>処理内容</th><td>
+              <ol class="list-decimal list-inside space-y-1">
+                <li>DynamoDB から実行中クエリ ID 一覧を取得</li>
+                <li>Redshift Data API の <code>describe_statement</code> で照会</li>
+                <li>ステータス別処理:
+                  <ul>
+                    <li><code>FINISHED</code> → 元 S3 ファイル削除 + DynamoDB レコード削除</li>
+                    <li><code>FAILED</code> → エラーログ出力 (バッチ⑥ で再実行のため DynamoDB はそのまま)</li>
+                    <li><code>ABORTED</code> → ログ出力</li>
+                    <li>実行中等 → DynamoDB の status / update_datetime を更新</li>
+                  </ul>
+                </li>
+              </ol>
+            </td></tr>
+            <tr><th>実行 SQL</th><td>(SQL 発行なし / Redshift Data API <code>describe_statement</code> のみ)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Batch 6 -->
+      <div class="batch-card" id="batch-6">
+        <h4><span class="batch-no">バッチ ⑥</span>失敗クエリ再実行 (<code>retry_redshift_query</code>)</h4>
+        <table>
+          <tbody>
+            <tr><th class="w-1/4">処理概要</th><td>バッチ⑤で <code>FAILED</code> 判定された Redshift クエリを改めて発行し直し、一時的な障害によるデータ欠損を防ぎます。</td></tr>
+            <tr><th>起動タイミング</th><td>1 時間毎 (<code>cron(0/60 * * * ? *)</code>) <span class="text-xs text-amber-700">※「暫定」コメントあり</span></td></tr>
+            <tr><th>取得元</th><td>DynamoDB <code>redshift-execute-status</code> (<code>status = 'FAILED'</code> のレコード)</td></tr>
+            <tr><th>連携先</th><td>Redshift Serverless (再 <code>COPY</code> / <code>UNLOAD</code> 発行)</td></tr>
+            <tr><th>処理内容</th><td>
+              <ol class="list-decimal list-inside space-y-1">
+                <li>DynamoDB を <code>FAILED</code> で絞り込みスキャン</li>
+                <li>各レコードの <code>query</code> 列に保存された SQL を再発行</li>
+                <li>新しい <code>execute_id</code> で DynamoDB を上書き、旧レコードは削除</li>
+              </ol>
+            </td></tr>
+            <tr><th>実行 SQL</th><td>元レコードに保存された SQL をそのまま再実行 (内容はバッチ①④由来の <code>COPY</code> または ②③ 由来の <code>UNLOAD</code>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= Section 4 ================= -->
+    <section id="sec-4">
+      <h2 class="text-2xl font-bold">4. DB (DWH) 仕様</h2>
+
+      <h3>4-1. DB 構造図</h3>
+      <div class="mermaid">
+erDiagram
+    jomuin_mst   ||--o{ common : "jomuin_cd"
+    eigyosyo_mst ||--o{ common : "eigyosyo_cd"
+    syaryo_mst   ||--o{ common : "syaryo_cd"
+    kokyaku_mst  ||--o{ common : "cstm_cd"
+    client_mst   ||--o{ common : "client_cd"
+    common ||--|| unko        : data_key
+    common ||--|| hyoka       : data_key
+    common ||--o{ eigyo       : data_key
+    common ||--o{ nyusyu      : data_key
+    common ||--o{ kessai      : data_key
+    common ||--o{ etc         : data_key
+    common ||--o{ event       : data_key
+    unko  ||--o{ unko_ryokin    : data_key
+    unko  ||--o{ unko_details   : data_key
+    unko  ||--o{ unko_tarifu    : data_key
+    unko  ||--o{ unko_alc       : data_key
+    unko  ||--o{ unko_ticket    : data_key
+    eigyo ||--o{ eigyo_ryokin   : "data_key+renban"
+    eigyo ||--o{ eigyo_place    : "data_key+renban"
+    eigyo ||--o{ eigyo_details  : "data_key+renban"
+    eigyo ||--o{ eigyo_pulse    : "data_key+renban"
+    eigyo ||--o{ eigyo_tarifu   : "data_key+renban"
+    eigyo ||--o{ eigyo_sokudo   : "data_key+renban"
+    nyusyu ||--o{ nyusyu_tarifu : "data_key+nyukosyuko_kbn"
+    etc    ||--o{ etc_gate      : "data_key+..."
+    hyoka  ||--o{ hyoka_pt      : data_key
+    hyoka  ||--o{ hyoka_eisyu   : data_key
+    hyoka  ||--o{ hyoka_rate    : data_key
+    hyoka  ||--o{ hyoka_saikosoku : data_key
+    hyoka  ||--o{ hyoka_unko    : data_key
+    hyoka  ||--o{ hyoka_measure : data_key
+    hyoka  ||--o{ hyoka_gai_ch  : data_key
+      </div>
+
+      <h3 id="sec-4-2">4-2. テーブル分類 (全 56 本)</h3>
+      <table>
+        <thead><tr><th>カテゴリ</th><th>件数</th><th>役割</th></tr></thead>
+        <tbody>
+          <tr><td><b>マスタ系</b></td><td>20</td><td>aegis から連携で受領</td></tr>
+          <tr><td><b>TX = トランザクション (運行)</b></td><td>7</td><td>1 乗務 (出庫〜入庫) 単位の運行記録</td></tr>
+          <tr><td><b>TX = トランザクション (営業)</b></td><td>9</td><td>営業 1 回 (実車 1 件) 単位</td></tr>
+          <tr><td><b>TX = トランザクション (入出庫)</b></td><td>2</td><td>入庫／出庫サマリ</td></tr>
+          <tr><td><b>TX = トランザクション (決済 / ETC / イベント)</b></td><td>4</td><td>決済明細 / ETC 通過 / 車内イベント</td></tr>
+          <tr><td><b>TX = トランザクション (評価)</b></td><td>8</td><td>安全運転・営収などの評価指標</td></tr>
+          <tr><td><b>ワーク / 一時</b></td><td>5</td><td>マスタ同期中間 / 取り込みエラー退避</td></tr>
+        </tbody>
+      </table>
+
+      <h3>4-3. 連携データがどのようにレコード化されるか</h3>
+      <h4>4-3-1. 解析後日報 JSON (LT27 → strike → buster)</h4>
+      <p>1 つの JSON ファイル (= 乗務員 1 日分) が、Redshift 上で <b>1 件の <code>common</code> レコード + 関連 TX (トランザクション) 数十件</b> に展開されます。</p>
+<pre><code>{1乗務分のJSON}
+   ├─ common(キー部)             → common テーブル (1 レコード / data_key)
+   ├─ unko(運行サマリ)            → unko テーブル (1 レコード / data_key)
+   ├─ hyoka(評価サマリ)           → hyoka テーブル (1 レコード / data_key)
+   ├─ eigyo[](営業 1 回 × N)      → eigyo テーブル (N レコード / data_key + renban)
+   ├─ nyusyu[](入庫/出庫)         → nyusyu テーブル
+   ├─ kessai[](決済明細 × N)      → kessai テーブル
+   ├─ etc[](ETC 通過 × N)         → etc / etc_gate テーブル
+   └─ event[](イベント × N)       → event テーブル</code></pre>
+      <h4>4-3-2. マスタ CSV (aegis → buster)</h4>
+      <p>ファイル名先頭ディレクトリと同名のテーブルに <code>COPY</code> で全件登録。例: <code>eigyosyo_mst/20260521_120000.csv</code> → テーブル <code>eigyosyo_mst</code> 全件投入。</p>
+
+      <h3 id="sec-4-4">4-4. テーブル定義 (全 56 テーブル)</h3>
+      <div class="callout-info">
+        出典: <code>taxi-cloud/ddl/redshift/taxicloud/*.sql</code> 全 56 ファイル。<b>全テーブルで共通する監査列</b>は最初に注記。<br/>
+        PK = PRIMARY KEY, SK = COMPOUND SORTKEY
+      </div>
+
+      <h4>4-4-1. 全テーブル共通カラム</h4>
+      <p><code>mesh_code_*_mst</code> (4) と <code>tmp_*_mst</code> (4) を除く全テーブルに以下が含まれる。</p>
+      <table>
+        <thead><tr><th>カラム</th><th>型</th><th>NULL</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td><code>reserve1〜5</code></td><td>varchar(1024)</td><td>NULL</td><td>予備カラム × 5</td></tr>
+          <tr><td><code>insert_datetime</code></td><td>datetime</td><td>NOT NULL</td><td>登録日時</td></tr>
+          <tr><td><code>insert_user_id</code></td><td>varchar(256)</td><td>NOT NULL</td><td>登録ユーザ ID</td></tr>
+          <tr><td><code>insert_business_id</code></td><td>char(15)</td><td>NOT NULL</td><td>登録業務 ID</td></tr>
+          <tr><td><code>update_datetime</code></td><td>datetime</td><td>NULL</td><td>更新日時</td></tr>
+          <tr><td><code>update_user_id</code></td><td>varchar(256)</td><td>NULL</td><td>更新ユーザ ID</td></tr>
+          <tr><td><code>update_business_id</code></td><td>char(15)</td><td>NULL</td><td>更新業務 ID</td></tr>
+          <tr><td><code>update_count</code></td><td>decimal(16,0)</td><td>NOT NULL DEFAULT 0</td><td>更新回数</td></tr>
+          <tr><td><code>delete_flg</code></td><td>decimal(1,0)</td><td>NOT NULL DEFAULT 0</td><td>論理削除フラグ (マスタ系のみ存在)</td></tr>
+        </tbody>
+      </table>
+
+      <!-- マスタ系 20 テーブル -->
+      <div class="category-section">
+        <h4>4-4-2. マスタ系 (20 テーブル)</h4>
+
+        <div class="table-card"><h5><code>client_mst</code> (荷主マスタ)</h5>
+          <p>固有: <code>client_cd varchar(8) NOT NULL</code>, <code>cstm_cd varchar(8) NOT NULL</code>, <code>eigyosyo_cd varchar(8) NOT NULL</code>, <code>client_nm varchar(80) NOT NULL</code></p>
+          <p>PK: <code>(client_cd, eigyosyo_cd, cstm_cd)</code> / SK: <code>(insert_datetime, update_datetime)</code></p>
+        </div>
+        <div class="table-card"><h5><code>disposalday_mst</code> (休祝日マスタ)</h5>
+          <p>固有: <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>disposalday_type varchar(1) NOT NULL</code>, <code>disposalday_time varchar(4)</code></p>
+          <p>PK: <code>(cstm_cd, eigyosyo_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyokuiki_mst</code> (営業区域マスタ)</h5>
+          <p>固有: <code>area_kbn varchar(1) NOT NULL</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>ken_cd varchar(2)</code>, <code>si_cd varchar(3)</code>, <code>ken_nm varchar(120)</code>, <code>si_nm varchar(240)</code>, <code>cho_nm varchar(240)</code></p>
+          <p>PK: <code>(eigyosyo_cd, cstm_cd, ken_cd, si_cd, cho_nm)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyosyo_mst</code> (営業所マスタ)</h5>
+          <p>固有: <code>eigyosyo_cd</code>, <code>eigyosyo_cd4 varchar(4)</code>, <code>cstm_cd</code>, <code>eigyosyo_nm varchar(160)</code>, <code>tujo_setei varchar(1)</code>, <code>eigyosyo_address varchar(1024)</code>, <code>vendor_cd varchar(5)</code>, <code>upd_datetime datetime NOT NULL</code></p>
+          <p>PK: <code>(eigyosyo_cd, cstm_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>information_mst</code> (お知らせマスタ)</h5>
+          <p>固有: <code>info_key varchar(1) NOT NULL</code>, <code>information VARCHAR(max)</code></p>
+          <p>PK: <code>(info_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>jomuin_mst</code> (乗務員マスタ)</h5>
+          <p>固有: <code>jomuin_cd</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>client_cd</code>, <code>jomuin_nm varchar(28)</code>, <code>jomuin_kana varchar(80)</code>, <code>kinmu_cd varchar(6)</code>, <code>kbn_cd varchar(6)</code>, <code>jomu_tm decimal(5,0)</code>, <code>jomu_km decimal(5,0)</code></p>
+          <p>PK: <code>(jomuin_cd, eigyosyo_cd, cstm_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>kanrisya_mst</code> (管理者マスタ)</h5>
+          <p>固有: <code>kanrisya_cd</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>client_cd</code>, <code>kanrisya_nm varchar(28)</code>, <code>kanrisya_pswd varchar(8)</code>, <code>tujo_setei varchar(1)</code></p>
+          <p>PK: <code>(kanrisya_cd, eigyosyo_cd, cstm_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>kokyaku_mst</code> (顧客／会社マスタ)</h5>
+          <p>固有: <code>cstm_cd varchar(8) NOT NULL</code>, <code>kokyaku_nm varchar(160)</code>, <code>vendor_cd varchar(5)</code>, <code>upd_datetime datetime NOT NULL</code>, <code>disposalday_time varchar(5) NOT NULL</code></p>
+          <p>PK: <code>(cstm_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>kubun_mst</code> (区分マスタ)</h5>
+          <p>固有: <code>kbn_cd varchar(2)</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>kbn_nm varchar(20)</code></p>
+          <p>PK: <code>(kbn_cd, eigyosyo_cd, cstm_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>mesh_code_3rd_mst</code> / <code>mesh_code_4th_mst</code> / <code>mesh_code_5km_mstc</code> / <code>mesh_code_5th_mst</code> (メッシュコード × 4)</h5>
+          <p>固有: <code>mesh_cd_* varchar(10〜16) NOT NULL</code>, <code>ido_upper / ido_lower / keido_left / keido_right DOUBLE PRECISION NOT NULL</code></p>
+          <p>PK: <code>(mesh_cd_*)</code> / SK: なし / <b>監査列なし</b></p>
+        </div>
+        <div class="table-card"><h5><code>sikutyoson_mst</code> (市区町村マスタ)</h5>
+          <p>固有: <code>ken_cd varchar(6)</code>, <code>ken_nm varchar(120)</code>, <code>si_cd varchar(9)</code>, <code>si_nm varchar(240)</code>, <code>si_yomi varchar(240)</code>, <code>cho_cd varchar(18)</code>, <code>cho_nm varchar(240)</code>, <code>cho_yomi varchar(240)</code>, <code>lon DOUBLE PRECISION</code>, <code>lat DOUBLE PRECISION</code></p>
+          <p>PK: <code>(ken_cd, si_cd, cho_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>syaryo_mst</code> (車両マスタ)</h5>
+          <p>固有 (約 25 カラム): <code>syaryo_cd varchar(6)</code>, <code>taxi_meter_admin_id int</code>, <code>iccid varchar(19) NOT NULL DEFAULT ''</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>unyo_type decimal(1,0)</code>, <code>client_cd</code>, <code>lt27_number/lt27rw_number varchar(8)</code>, <code>syaryo_nm varchar(60)</code>, <code>syasyu_cd varchar(2)</code>, <code>plate_no varchar(64)</code>, <code>vendor_cd</code>, <code>car_model_cd varchar(2)</code>, <code>main_loading_datetime / main_create_datetime / activate_datetime / delete_datetime / upd_datetime datetime</code>, <code>main_rom_cd varchar(4)</code>, <code>number_plate_area/kind/kana/num varchar</code>, <code>service_status decimal(1,0)</code></p>
+          <p>PK: <code>(syaryo_cd, eigyosyo_cd, cstm_cd, iccid)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>syasyu_mst</code> (車種マスタ)</h5>
+          <p>固有: <code>syasyu_cd varchar(6)</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>syasyu_nm varchar(16)</code></p>
+          <p>PK: <code>(syasyu_cd, eigyosyo_cd, cstm_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>untentiten_mst</code> (運転地点マスタ)</h5>
+          <p>固有: <code>titen_cd varchar(4)</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>titen_nm varchar(40)</code>, <code>tujo_setei varchar(1)</code></p>
+          <p>PK: <code>(titen_cd, eigyosyo_cd, cstm_cd)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>user_mst</code> (ユーザマスタ)</h5>
+          <p>固有: <code>user_id varchar(191)</code>, <code>user_nm varchar(80)</code>, <code>user_pswd varchar(60)</code>, <code>authority decimal(1,0)</code>, <code>vendor_cd</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>kcps_delete_flg decimal(1,0)</code>, <code>upd_datetime datetime</code></p>
+          <p>PK: <code>(user_id)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>userarea_mst</code> / <code>userarea_l_mst</code> / <code>userarea_p_mst</code> (ユーザエリア × 3)</h5>
+          <p><code>userarea_mst</code>: <code>a_id decimal(8,0)</code>, <code>area_cd varchar(8)</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>area_nm varchar(160)</code>, <code>rsv decimal(8,0)</code> / PK: <code>(eigyosyo_cd, cstm_cd, a_id)</code></p>
+          <p><code>userarea_l_mst</code>: <code>l_id</code>, <code>group_no</code>, <code>left_a_id</code>, <code>right_a_id</code>, <code>point_rec_cnt</code>, <code>x1/y1/x2/y2 decimal(9,0)</code>, <code>color_cd</code>, <code>rsv</code> / PK: <code>(eigyosyo_cd, cstm_cd, l_id)</code></p>
+          <p><code>userarea_p_mst</code>: <code>l_id</code>, <code>p_id decimal(3,0)</code>, <code>px/py decimal(9,0)</code> / PK: <code>(eigyosyo_cd, cstm_cd, l_id, p_id)</code></p>
+        </div>
+      </div>
+
+      <!-- TX 運行 -->
+      <div class="category-section">
+        <h4>4-4-3. TX = トランザクション (運行) - 7 テーブル</h4>
+        <div class="table-card"><h5><code>common</code> (共通キーデータ - 全 TX の親)</h5>
+          <p>固有: <code>data_key varchar(48) NOT NULL</code>, <code>cstm_cd</code>, <code>eigyosyo_cd</code>, <code>client_cd</code>, <code>jomuin_cd</code>, <code>syaryo_cd varchar(6)</code>, <code>syukko_date/pc_syori_date/rf_syori_date varchar(8)</code>, <code>iccid varchar(19)</code></p>
+          <p>PK: <code>(data_key)</code> / SK: <code>(data_key, insert_datetime, update_datetime)</code></p>
+        </div>
+        <div class="table-card"><h5><code>unko</code> (運行データ - 1 乗務サマリ、約 30 カラム)</h5>
+          <p>固有: <code>data_key</code>, <code>cdimg_id varchar(26)</code>, <code>isdegi_flg decimal(1,0)</code>, <code>eigyosyo_cd4</code>, <code>kinmu_cd varchar(2)</code>, <code>jomuin_nm varchar(56)</code>, <code>syaryo_syubetsu varchar(16)</code>, <code>journal_no varchar(4)</code>, <code>pc_syori_dtm / rf_syori_dtm / kiroku_start_dtm / syukko_dtm / nyuko_dtm datetime</code>, <code>roudou_tm decimal(7,0)</code> (労働時間), <code>jomu_km decimal(7,1)</code> (乗務距離), <code>kyukei_tm decimal(4,0)</code> (休憩時間), <code>kusyateisi_tm decimal(7,0)</code> (空車停止時間), <code>unko_man_jinin / unko_woman_jinin decimal(3,0)</code>, フラグ各種 (<code>saikakikomi_flg</code>, <code>unko_mikakikomi_flg</code>, <code>unko_eigyochu_syuko_flg</code>, <code>nyuko_flg</code>, <code>syuko_flg</code>, <code>code_fuiti_flg</code>, <code>keizokusyuko_flg</code>, <code>keizokunyuko_flg</code>, <code>geisya_kbn</code>, <code>kyukei_proc</code>), <code>kyukei_judge_tm</code>, <code>unko_syoyo_tm</code></p>
+          <p>PK: <code>(data_key)</code> / SK: <code>(data_key, insert_datetime, update_datetime)</code></p>
+        </div>
+        <div class="table-card"><h5><code>unko_ryokin</code> (運行料金データ)</h5>
+          <p>固有: <code>data_key</code>, <code>sa_geicancel_kin decimal(6,0)</code>, <code>mikaki_jikei_kin / mikaki_jikei_tax / okikaesagaku_kin / unko_etc_ryokin / etc_kusya_ryokin / etc_zisya_ryokin / etc_geisya_ryokin / total_tatekae_kin / total_f3_kin / total_kihon_kin / total_zigo_kin / total_geisya_kin / kakusyu_ryokin decimal(7,0)</code>, <code>total_okikae_kin_flg decimal(1,0)</code>, <code>total_okikae_kin / total_teigaku_kin / soeisyu / unko_gensyu / unko_misyu / tax / zeinuki_soeisyu decimal(7,0)</code>, <code>tax_ratio decimal(3,0)</code>, <code>kihon_ryokin / zigo_ryokin / zigo2_ryokin / zigo3_ryokin / geisya_ryokin decimal(5,0)</code>, <code>km_per_syunyu / jkm_per_syunyu decimal(7,2)</code>, <code>tatekae_kousoku / tatekae_chusya / tatekae_sonota / total_kin decimal(7,0)</code></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>unko_details</code> (運行詳細データ)</h5>
+          <p>固有: <code>data_key</code>, <code>sa_odo_km decimal(6,0)</code>, <code>sa_eigyo_cnt / sa_alleigyo_cnt / sa_zigo1_cnt / sa_zigo2_cnt / sa_zigo3_cnt decimal(4,0)</code>, <code>sa_eigyosoko_km / sa_zensoko_km decimal(4,1)</code>, <code>sa_geisya_cnt</code>, <code>sa_kuuten_km / sa_geisya_km decimal(5,1)</code>, <code>sa_zeikin_sisu</code>, <code>sa_rui_handle_tm / sa_zensoko_tm / sa_eigyo_soko_tm / sa_eigyo_tm</code>, <code>sa_geicancel_cnt / sa_back_cnt / mikaki_jikei_cnt</code>, <code>zissyaritu decimal(5,2)</code>, <code>kojo_km decimal(4,0)</code></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>unko_tarifu</code> (運行タリフデータ)</h5>
+          <p>固有: <code>data_key</code>, <code>sa_tarifu_a〜l_kin decimal(6,0)</code> (タリフ A〜L 金額 × 14), <code>sa_tarifu_a〜l_cnt decimal(5,0)</code> (件数 × 14)</p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>unko_alc</code> (アルコールチェッカー測定データ)</h5>
+          <p>固有: <code>data_key</code>, <code>alc_s_dtm datetime</code> (出庫前), <code>alc_s_result varchar(1)</code>, <code>alc_s_value varchar(4)</code>, <code>alc_e_dtm</code> (入庫後), <code>alc_e_result</code>, <code>alc_e_value</code></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>unko_ticket</code> (チケットデータ)</h5>
+          <p>固有: <code>data_key</code>, <code>ticket01〜20_total_kin decimal(7,0)</code> (チケット 20 種類別合計金額)</p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+      </div>
+
+      <!-- TX 営業 -->
+      <div class="category-section">
+        <h4>4-4-4. TX = トランザクション (営業) - 9 テーブル</h4>
+        <div class="table-card"><h5><code>eigyo</code> (営業時系列データ - 営業 1 回ごと、約 30 カラム)</h5>
+          <p>固有: <code>data_key</code>, <code>renban decimal(3,0) NOT NULL</code>, <code>eigyo_no decimal(3,0)</code>, <code>gyomu_kbn</code>, <code>kaisi_dtm / syuryo_dtm datetime</code>, <code>yubi varchar(2)</code>, <code>man_jinin / woman_jinin / yobi_jinin1 / yobi_jinin2 decimal(1,0)</code>, <code>bikou varchar(10)</code>, <code>memo varchar(6)</code>, <code>fuel decimal(5,2)</code>, フラグ各種 (<code>misyu_flg</code>, <code>mikakikomi_flg</code>, <code>eigyochu_syuko_flg</code>, <code>system_err_flg</code>, <code>geisya_flg</code>, <code>meter_err_flg</code>, <code>zissya_dendan_flg</code>, <code>kuusya_dendan_flg</code>, <code>etc_err_flg</code>, <code>kessai_err_flg</code>, <code>teigaku_flg</code>), <code>special2_flg / button_flg varchar(4)</code>, <code>any_input1〜3 varchar(8)</code>, <code>free_count</code>, <code>jk_jissya_tm datetime</code>, <code>jk_uriage_info / jk_untin_type / jk_seni_flg varchar(2)</code>, <code>eigyo_start_dtm datetime</code></p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_ryokin</code> (営業時系列料金データ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>goukei_kin / gensyu / misyu decimal(7,0)</code>, <code>kosoku_kin / chusya_kin / sonota_kin decimal(5,0)</code>, <code>f3_kin decimal(6,0)</code>, <code>etc_ryokin decimal(7,0)</code>, <code>tikan_kin_flg</code>, <code>tikan_kin / jk_untin_kin / jk_fuka_kin / jk_waribiki_kin / jk_total_tarifu_kasan_kin / jk_total_tarifu_waribiki_kin decimal(7,0)</code></p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_place</code> (営業時系列地点データ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>zyosyati / kousyati / keiyuti1 / keiyuti2 / keiyuti3 varchar(480)</code> (乗車地・降車地・経由地住所), <code>*_henkou varchar(480)</code> (変更後住所), <code>zyosyati_ido decimal(8,6)</code> / <code>zyosyati_keido decimal(9,6)</code> 等 (乗車地・降車地・経由地 1〜3 の緯度経度), <code>z_gps_sokui</code>, <code>z_gps_status</code>, <code>z_gps_tm varchar(23)</code>, 同様に <code>k_gps_*</code>, <code>k1_gps_*</code>, <code>k2_gps_*</code>, <code>k3_gps_*</code></p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_details</code> (営業時系列詳細データ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>eigyo_cnt / alleigyo_cnt / zigo1_cnt / zigo2_cnt / zigo3_cnt decimal(4,0)</code>, <code>eigyo_soko_km / zen_soko_km decimal(4,1)</code>, <code>geisya_cnt</code>, <code>kuuten_km / geisya_km decimal(5,1)</code>, <code>back_cnt</code>, <code>zeikin_sisu</code>, <code>handle_tm / soko_tm / eigyo_soko_tm / eigyo_tm / exp_eigyo_cnt / exp_alleigyo_cnt / kyaku_wait_tm decimal(4,0)</code>, <code>kuikigai_flg_org / kuikigai_flg / syusei_flg</code>, <code>syoyo_tm / kusya_stop_cnt</code>, <code>zyosyati_mesh / kousyati_mesh varchar(14)</code></p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_pulse</code> (営業時系列パルスデータ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>pulse_cnt1〜24 decimal(10,0)</code> (24 区間のパルス計数)</p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_tarifu</code> (営業時系列タリフ料金データ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>tarifu_a〜l_kin decimal(6,0)</code> (タリフ A〜L 料金 × 14)</p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_tarifu_tm</code> (営業時系列タリフ時間データ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>tarifu_tm_tinso / tinsokosoku / warimashi / warimashikosoku / shiharai / geisya / musenmati / kashikiri decimal(4,0)</code> (タリフ別時間 × 8)</p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_kusya_tm</code> (営業時系列空車明細時間データ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>kusya_tm_kuso_a / kutei_a / kuso_b / kutei_b / kuso_c / kutei_c decimal(4,0)</code></p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>eigyo_sokudo</code> (営業時系列速度データ)</h5>
+          <p>固有: <code>data_key + renban</code>, <code>j_saikosoku / k_saikosoku decimal(4,0)</code> (実車・空車最高速度), <code>j_sokudo_ovtm / k_sokudo_ovtm</code> (超過時間), <code>j_sokudo_ovcnt / k_sokudo_ovcnt</code> (超過回数)</p>
+          <p>PK: <code>(data_key, renban)</code> / SK: 共通</p>
+        </div>
+      </div>
+
+      <!-- TX 入出庫 -->
+      <div class="category-section">
+        <h4>4-4-5. TX = トランザクション (入出庫) - 2 テーブル</h4>
+        <div class="table-card"><h5><code>nyusyu</code> (入出庫データ)</h5>
+          <p>固有: <code>data_key</code>, <code>nyukosyuko_kbn decimal(1,0) NOT NULL</code>, <code>eigyo_cnt_total / alleigyo_cnt_total / zigo1_cnt_total / zigo2_cnt_total / zigo3_cnt_total decimal(4,0)</code>, <code>eigyosoko_km_total / zensoko_km_total decimal(4,1)</code>, <code>geisya_cnt_total</code>, <code>kuuten_km_total / geisya_km_total decimal(5,1)</code>, <code>zeikin_sisu_total</code>, <code>soko_tm_total / eigyo_soko_tm_total / eigyo_tm_total / rui_handle_tm_total</code>, <code>geicancel_kin_total decimal(6,0)</code>, <code>geicancel_cnt_total / back_cnt_total</code>, <code>odo_km_total decimal(6,0)</code>, <code>free_count_total</code>, <code>untin_sisu_total / ryokin_sisu_total decimal(7,0)</code>, <code>input_flag varchar(2)</code>, <code>okikaemae_kin_total</code>, <code>sisu_info varchar(24)</code>, <code>jomu_km_total</code>, <code>kyori_hosei decimal(5,1)</code></p>
+          <p>PK: <code>(data_key, nyukosyuko_kbn)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>nyusyu_tarifu</code> (入出庫タリフデータ - 70 カラム超)</h5>
+          <p>固有: <code>data_key + nyukosyuko_kbn</code>, <code>tarifu_a〜l_kin_total decimal(6,0)</code> × 14, <code>tarifu_a〜l_cnt_total decimal(5,0)</code> × 14, <code>tarifu_a〜l_nm varchar(64)</code> × 14, <code>tarifu_a〜l_kind_cd decimal(2,0)</code> × 14, <code>tarifu_a〜l_calc_cd varchar(1)</code> × 14</p>
+          <p>PK: <code>(data_key, nyukosyuko_kbn)</code> / SK: 共通</p>
+        </div>
+      </div>
+
+      <!-- TX 決済/ETC/イベント -->
+      <div class="category-section">
+        <h4>4-4-6. TX = トランザクション (決済 / ETC / イベント) - 4 テーブル</h4>
+        <div class="table-card"><h5><code>kessai</code> (決済時系列データ)</h5>
+          <p>固有: <code>data_key</code>, <code>eigyo_no decimal(3,0)</code>, <code>kessai_renban decimal(3,0)</code>, <code>kessai_type / sumup_kbn / kessai_kbn varchar(2)</code>, <code>kessai_sub_kbn varchar(256)</code>, <code>kessai_kin decimal(8,0)</code>, <code>syukkomae_flg</code>, <code>item_cd_list / item_val_list varchar(256)</code>, <code>biko / yobi1〜3 varchar(1024)</code></p>
+          <p>PK: <code>(data_key, eigyo_no, kessai_renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>etc</code> (ETC 時系列データ)</h5>
+          <p>固有: <code>data_key</code>, <code>etc_renban decimal(3,0)</code>, <code>etc_eigyo_cnt_total / etc_alleigyo_cnt_total</code>, <code>eigyo_no / etc_eigyo_renban</code>, <code>syaryo_status varchar(2)</code>, <code>tuka_dtm datetime</code>, <code>kakin_syasyu varchar(2)</code>, <code>tukou_kin decimal(6,0)</code></p>
+          <p>PK: <code>(data_key, etc_renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>etc_gate</code> (ETC 時系列料金所データ)</h5>
+          <p>固有: <code>data_key + etc_renban</code>, <code>ent_gate varchar(10)</code>, <code>ent_gate_jid decimal(5,0)</code>, <code>ent_gate_rno varchar(2)</code>, <code>ent_gate_tgno varchar(3)</code>, <code>ent_gate_name varchar(160)</code>, <code>ent_gate_abbreviation varchar(48)</code>, 同型で <code>exit_gate*</code> 6 カラム</p>
+          <p>PK: <code>(data_key, etc_renban)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>event</code> (イベントデータ)</h5>
+          <p>固有: <code>data_key</code>, <code>event_type varchar(2) NOT NULL</code>, <code>event_tm TIMESTAMP NOT NULL</code>, <code>event_ido decimal(8,6)</code>, <code>event_keido decimal(9,6)</code>, <code>mesh_1 varchar(4)</code>, <code>mesh_2/3/one_10/one_100/one_1000 varchar(2)</code></p>
+          <p>PK: <code>(data_key, event_type, event_tm)</code> / SK: 共通</p>
+        </div>
+      </div>
+
+      <!-- TX 評価 -->
+      <div class="category-section">
+        <h4>4-4-7. TX = トランザクション (評価) - 8 テーブル</h4>
+        <div class="table-card"><h5><code>hyoka</code> (評価データ)</h5>
+          <p>固有: <code>data_key</code>, <code>sidohk_flg</code>, <code>ruikei_soko_km decimal(9,0)</code>, <code>ruikei_soko_tm / idle_tm decimal(9,1)</code>, <code>accon_cnt decimal(5,0)</code>, <code>kousoku_tm / ippan_tm decimal(9,1)</code>, <code>accon_tm / ign_on_tm / ign_idle_tm decimal(10,1)</code></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>hyoka_pt</code> (評価点数データ)</h5>
+          <p>固有: <code>data_key</code>, <code>sogo_hyoka varchar(1)</code>, <code>sogo_hyoka_pt decimal(4,1)</code>, <code>eigyohyoka</code>, <code>eigyohyoka_pt</code>, <code>anzenhyoka_j</code>, <code>anzenhyoka_j_pt</code>, <code>anzenhyoka_k</code>, <code>anzenhyoka_k_pt</code></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>hyoka_eisyu</code> (評価営収データ)</h5>
+          <p>固有: <code>data_key</code>, <code>eisyu_pkm / mpt decimal(8,2)</code>, <code>pt decimal(3,0)</code>, <code>rank varchar(1)</code> の 4 列セット × { eisyu_pkm / eisyu_ptm / eisyu_pcnt } 3 セット</p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>hyoka_rate</code> (評価率データ)</h5>
+          <p>固有: <code>data_key</code>, 値+mpt+pt+rank の 4 列セット × { jisyaritu (実車率) / kyukeiritu (休憩率) / kuteiritu (空程率) } 3 セット</p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>hyoka_saikosoku</code> (評価最高速度データ)</h5>
+          <p>固有: <code>data_key</code>, 値+mpt+hpt+pt+rank+sido の 6 列セット × { 実車・空車 × 一般・高速 = 4 種類 } 約 24 カラム</p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>hyoka_unko</code> (評価運行データ - 約 84 カラム)</h5>
+          <p>固有: <code>data_key</code>, 実車/空車 (<code>j_</code> / <code>k_</code> 接頭辞) × { 急発進、急減速、速度超過 (回数/時間)、バック、急旋回、急ブレーキ } の <b>各指標が値+mpt+hpt+pt+rank+sido の 6 列セット × 14 セット</b></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>hyoka_measure</code> (評価計測データ)</h5>
+          <p>固有: <code>data_key</code>, <code>sokudo_ovki/ovji/ovkk/ovjk_tm decimal(6,1)</code>, <code>sokudo_ovki/ovji/ovkk/ovjk_cnt decimal(5,0)</code>, <code>hasin_k/j_cnt</code>, <code>kyuhasin/kyukasoku/kyugensoku/back/kyusenkai/kyubraking/hazardsign の各 k_cnt/j_cnt</code></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+        <div class="table-card"><h5><code>hyoka_gai_ch</code> (外部 ch 回数データ)</h5>
+          <p>固有: <code>data_key</code>, <code>gai1_ch / gai2_ch / gai3_ch / gai4_ch / gai5_ch / gai6_ch decimal(4,0)</code></p>
+          <p>PK: <code>(data_key)</code> / SK: 共通</p>
+        </div>
+      </div>
+
+      <!-- ワーク -->
+      <div class="category-section">
+        <h4>4-4-8. ワーク / 一時テーブル - 5 テーブル</h4>
+        <div class="table-card"><h5><code>nippou_wk</code> (日報ワーク - バリデーション失敗退避)</h5>
+          <p>固有: <code>nippou_wk_id BIGINT NOT NULL IDENTITY(1,1)</code>, <code>data_key varchar(256)</code>, <code>common / unko / nyusyu / eigyo / kessai / etc / event / hyoka text</code> (各セクションを JSON 文字列のまま保持), <code>process_start_datetime datetime</code>, <code>processed_flg decimal(1,0)</code>, <code>error_flg decimal(1,0)</code></p>
+          <p>PK: <code>(nippou_wk_id)</code> / SK: <code>(data_key, insert_datetime, update_datetime)</code></p>
+        </div>
+        <div class="table-card"><h5><code>tmp_eigyosyo_mst</code> / <code>tmp_kokyaku_mst</code> / <code>tmp_syaryo_mst</code> / <code>tmp_user_mst</code> (一時テーブル × 4)</h5>
+          <p>マスタ同期の中間 staging。物理名は英語表記 (例: <code>sales_office_code</code> / <code>client_code</code> / <code>vehicle_code</code> / <code>user_id</code> 等)、<code>upd_datetime timestamp</code> を含む。</p>
+          <p>PK / SK / 監査列: <b>なし</b> (<code>tmp_user_mst</code> のみ <code>delete_flg</code> を持つ)</p>
+        </div>
+      </div>
+
+      <div class="callout-info mt-3">
+        上記 56 テーブル定義は <code>taxi-cloud/ddl/redshift/taxicloud/*.sql</code> 全件と一致。<br/>
+        内訳: マスタ 20 + 運行 7 + 営業 9 + 入出庫 2 + 決済/ETC/イベント 4 + 評価 8 + ワーク・tmp 6 (nippou_wk + tmp_×5) ※実 SQL ファイル数は 56。
+      </div>
+
+      <h3 id="sec-4-5">4-5. データ保持サイクル (TTL／削除実装の事実)</h3>
+
+      <h4>4-5-1. Redshift テーブル</h4>
+      <table>
+        <thead><tr><th>観点</th><th>結果 (ソースコードからの事実)</th></tr></thead>
+        <tbody>
+          <tr><td><b>DDL 上の TTL 指定</b></td><td><b>なし</b>。Redshift 自体に TTL 機能はなく、<code>CREATE TABLE</code> に保持期間指定もない。全 56 テーブルで TTL 系の宣言は存在しない。</td></tr>
+          <tr><td><b>物理削除を行うバッチ</b></td><td><b>本リポジトリ内に存在しない</b>。<code>grep -rn "DELETE FROM" backend/buster</code> の結果 0 件。<code>BATCH_ID_*</code> 定数にも削除系バッチ定義なし。</td></tr>
+          <tr><td><b>論理削除フラグ</b></td><td>マスタ系のみ <code>delete_flg decimal(1,0) NOT NULL DEFAULT 0</code> を持つ。aegis 側マスタの delete 操作に追従して 1 に立てる運用 (本バッチでは物理削除しない)。</td></tr>
+          <tr><td><b>VACUUM/再編成</b></td><td>自動実行コードなし (Redshift Serverless の自動メンテナンスに依存)。</td></tr>
+          <tr><td><b>結論 (コード上の事実)</b></td><td><b>DWH 上の業務レコードは無期限保持</b>。コード上の物理削除実装は存在しないため、運用側で別途 SQL を発行する以外にレコードは消えない。<br/>※ 「過去 2 年分」は運用方針／設計書由来であり、本リポジトリのコードからは実装根拠が確認できない。</td></tr>
+        </tbody>
+      </table>
+
+      <h4>4-5-2. 各データストアの保持実装</h4>
+      <table>
+        <thead><tr><th>対象</th><th>保持期間 (実装事実)</th><th>根拠 (ソース)</th></tr></thead>
+        <tbody>
+          <tr><td>Redshift 業務テーブル (TX 系)</td><td><b>無期限</b> (物理削除なし、TTL なし)</td><td>DDL + バッチコード調査結果</td></tr>
+          <tr><td>Redshift マスタテーブル</td><td><b>無期限 + <code>delete_flg</code> で論理削除のみ</b></td><td>DDL の <code>delete_flg</code> / 物理削除コードなし</td></tr>
+          <tr><td>Redshift <code>nippou_wk</code></td><td><b>無期限</b> (<code>processed_flg</code> 管理だが削除コードなし)</td><td>DDL / <code>add_nippou_wk</code></td></tr>
+          <tr><td>S3 一時 CSV (<code>s3-link-dwh-json/tmp/</code>)</td><td><b>COPY FINISHED 後に自動削除</b></td><td><code>redshift_execute_status_manager.py:71-80</code> <code>delete_source_file()</code></td></tr>
+          <tr><td>S3 受領 JSON (<code>s3-link-dwh-json/</code>)</td><td><b>バッチ① 取り込み成功時に即削除</b></td><td><code>get_json_from_strike.py:187</code></td></tr>
+          <tr><td>S3 連携 CSV (export 先 = duel/aegis)</td><td>aegis 側 <code>import_dwh_redshift_data</code> は取り込み後に元 S3 を delete</td><td><code>import_dwh_redshift_data.py:67</code></td></tr>
+          <tr><td>CloudWatch Logs (各 Lambda)</td><td><b>14 日間</b></td><td><code>template.yml</code> 各 LogGroup の <code>RetentionInDays: 14</code></td></tr>
+          <tr><td>DynamoDB <code>redshift-execute-status</code></td><td>クエリ FINISHED で自動削除 (バッチ⑤) / FAILED は保持 → ⑥で再実行後削除</td><td><code>redshift_execute_status_manager.py:30-32</code></td></tr>
+          <tr><td>DynamoDB <code>batch-status</code> / <code>batch-log</code> / <code>tmp-batch-log</code></td><td><b>TTL 設定なし、削除コードなし → 無期限</b></td><td><code>template.yml</code> 276-316 行で <code>TimeToLiveSpecification</code> 未設定を確認</td></tr>
+          <tr><td>DynamoDB <code>params</code></td><td><b>無期限</b> (設定値マスタ)</td><td>共通スタック</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout-warn mt-3">
+        <b>保持運用上の注意</b>
+        <ul>
+          <li>業務 TX (トランザクション) の物理削除は本リポジトリでは未実装。Redshift Serverless はストレージ課金 (RMS) があるため、保持方針 (例: 2 年で削除) を持つ場合は別途運用バッチか手動 SQL の整備が必要。</li>
+          <li>DynamoDB の運用メタは件数が膨らみやすい (特に <code>batch-log</code>)。本来は TTL を設定すべきだが現状未設定 → 別途運用検討推奨。</li>
+        </ul>
+      </div>
+
+      <h3 id="sec-4-6">4-6. 暗号化・セキュリティ</h3>
+      <table>
+        <thead><tr><th>対象</th><th>暗号化 / 保護方式</th></tr></thead>
+        <tbody>
+          <tr><td><b>Redshift Serverless</b></td><td>保管時暗号化 (AWS KMS / デフォルトは AWS マネージドキー) ／ 通信は TLS。アクセスは IAM ロール (<code>redshift_role</code> / <code>redshift_query_role</code>) + Secrets Manager 経由のクレデンシャルに限定</td></tr>
+          <tr><td><b>S3 バケット</b></td><td>SSE-S3 (AES-256) もしくは SSE-KMS による保管時暗号化。VPC エンドポイント経由でのアクセス</td></tr>
+          <tr><td><b>DynamoDB</b></td><td>保管時暗号化 (AWS マネージドキー / KMS) はデフォルト有効</td></tr>
+          <tr><td><b>Secrets Manager</b></td><td>KMS で暗号化されたシークレット (<code>buster-${EnvType}-redshift-serverless-secrets</code>) を Lambda が起動時に解決</td></tr>
+          <tr><td><b>ネットワーク境界</b></td><td>Lambda はプロテクテッドサブネット内で稼働し、Redshift / S3 / Secrets Manager へは VPC 内経由で接続</td></tr>
+          <tr><td><b>アクセス制御</b></td><td>IAM ロールベース。Redshift IAM 認証で <code>IAM_ROLE</code> をクエリ内に埋め込む (パスワードはコード上に現れない)</td></tr>
+          <tr><td><b>監査</b></td><td>CloudTrail (アカウント標準) + CloudWatch Logs 14 日 + SNS → Backlog 自動起票</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= Section 5 ================= -->
+    <section id="sec-5">
+      <h2 class="text-2xl font-bold">5. 料金削減施策 (取り込み停止案)</h2>
+      <div class="callout-info">
+        <b>本章の目的</b>: 料金削減のため、DWH への「取り込み処理」のトリガーを停止し、Redshift への書き込みを止めることで料金削減ができないかを検証する。あわせて、停止中のデータ欠損リスクと復旧可否を整理する。
+      </div>
+
+      <h3>5-1. 想定する「取り込み処理」と該当トリガー</h3>
+      <table>
+        <thead><tr><th>区分</th><th>バッチ</th><th>役割</th><th>停止すべきトリガー</th></tr></thead>
+        <tbody>
+          <tr><td>取り込み</td><td>① <code>get_json_from_strike</code></td><td>解析後日報 JSON → Redshift COPY</td><td><b>(A)</b> Lambda の Event Source Mapping (SQS <code>link_dwh_data</code>) を <b>Disable</b><br/><b>(B)</b> S3 (<code>s3-link-dwh-json</code>) のイベント通知を Disable (オプション)</td></tr>
+          <tr><td>取り込み</td><td>④ <code>sync_master_data</code></td><td>aegis マスタ CSV → Redshift COPY</td><td><b>(C)</b> Lambda の Event Source Mapping (SQS <code>data_collect</code>) を <b>Disable</b></td></tr>
+        </tbody>
+      </table>
+      <p class="mt-3">参考までに、書き出し系・運用系も併せて停止可能:</p>
+      <table>
+        <thead><tr><th>区分</th><th>バッチ</th><th>停止トリガー</th><th>停止時の影響</th></tr></thead>
+        <tbody>
+          <tr><td>書き出し</td><td>② <code>export_dwh_data</code></td><td>EventBridge Schedule Disable</td><td>duel BI のマート更新が停止</td></tr>
+          <tr><td>書き出し</td><td>③ <code>export_dwh_redshift_data</code></td><td>EventBridge Schedule Disable</td><td>aegis 側参照系画面のデータが古いまま</td></tr>
+          <tr><td>運用</td><td>⑤ <code>redshift_execute_status_manager</code></td><td>EventBridge Schedule Disable</td><td>取り込み停止中は安全に停止可</td></tr>
+          <tr><td>運用</td><td>⑥ <code>retry_redshift_query</code></td><td>EventBridge Schedule Disable</td><td>同上</td></tr>
+        </tbody>
+      </table>
+
+      <h3>5-2. 料金削減の有効性</h3>
+      <h4>5-2-1. 削減対象 (大きい順)</h4>
+      <table>
+        <thead><tr><th>コスト要素</th><th>削減効果</th><th>補足</th></tr></thead>
+        <tbody>
+          <tr><td><b>Redshift Serverless 計算 (RPU 秒)</b></td><td><span class="badge bg-emerald-100 text-emerald-800">大</span></td><td>COPY / UNLOAD クエリが発生しなくなるため、<b>最大の削減源</b></td></tr>
+          <tr><td>Redshift Serverless ストレージ (RMS)</td><td><span class="badge bg-slate-200 text-slate-700">無し</span></td><td>既存データを保持する限り課金は継続</td></tr>
+          <tr><td>Lambda 実行</td><td><span class="badge bg-blue-100 text-blue-800">小</span></td><td>取り込み Lambda 実行回数が 0</td></tr>
+          <tr><td>S3 ストレージ</td><td><span class="badge bg-rose-100 text-rose-800">逆増</span></td><td>取り込み停止中、JSON が滞留して増加</td></tr>
+          <tr><td>SQS リクエスト</td><td><span class="badge bg-blue-100 text-blue-800">小</span></td><td>配送は継続、Lambda 側で受信されない</td></tr>
+          <tr><td>DynamoDB</td><td><span class="badge bg-slate-200 text-slate-700">ほぼゼロ</span></td><td>取り込みが無ければ書き込み発生せず</td></tr>
+          <tr><td>CloudWatch Logs</td><td><span class="badge bg-blue-100 text-blue-800">小</span></td><td>ログ出力が減る</td></tr>
+        </tbody>
+      </table>
+
+      <h4>5-2-2. 評価</h4>
+      <ul>
+        <li><b>有効である</b>: 料金は Redshift Serverless の RPU 秒に大きく依存する設計で、COPY/UNLOAD を止めれば計算課金は劇的に減少する。</li>
+        <li><b>「① のみ停止」では効果が限定的</b>。書き出し ②③ も 10 分毎に動いているため、これらも併せて停止しないと Redshift の起動時間は残る。</li>
+        <li><b>ストレージ料金は減らない</b>。完全削減には DWH 自体の停止 (workgroup 削除 → snapshot 化) が必要。</li>
+        <li><b>業務影響</b>: 取り込みを止める＝BI 画面のデータが鮮度を失う。</li>
+      </ul>
+
+      <h4>5-2-3. 推奨される停止パターン</h4>
+      <table>
+        <thead><tr><th>パターン</th><th>停止対象</th><th>削減効果</th><th>業務影響</th></tr></thead>
+        <tbody>
+          <tr><td><b>A. 軽量停止</b></td><td>①④ のみ</td><td>中</td><td>取り込み停止のみ。BI には既存データ範囲で配信が続く</td></tr>
+          <tr><td><b>B. 全バッチ停止</b></td><td>①②③④⑤⑥ すべて</td><td>大</td><td>DWH への/からの全ての動きが停止</td></tr>
+          <tr><td><b>C. アカウント全停止</b></td><td>上記 + Redshift workgroup 削除</td><td>最大 (ストレージ含む)</td><td>復旧に時間と手順が必要</td></tr>
+        </tbody>
+      </table>
+
+      <h3>5-3. データ欠損リスクと復旧可否</h3>
+      <h4>5-3-1. 取り込み停止中のデータの流れと残存箇所</h4>
+<pre><code>[LT27 解析 Agent]
+   └─ HTTPS で解析後 JSON を strike 側 S3 にアップロード
+        ▼
+[strike: copy_data_to_dwh_and_master]
+   └─ buster の s3-link-dwh-json に copy → strike S3 から delete  ← copy後にstrike側は消える
+        ▼
+[S3: taxi-cloud-buster-${EnvType}-s3-link-dwh-json]   ← ★停止中はここに滞留
+        │  (S3 イベント通知 → SQS link_dwh_data)
+        ▼
+[SQS: link_dwh_data]                                  ← ★停止中はメッセージが滞留 (最大 14 日)
+        ▼
+[Lambda: get_json_from_strike]  ← ← 停止対象トリガー
+        ▼
+[Redshift] (取り込み完了後、S3 の JSON は delete)</code></pre>
+
+      <h4>5-3-2. データ別の欠損リスクと復旧可否</h4>
+      <table>
+        <thead><tr><th>データ種別</th><th>残存箇所</th><th>完全欠損リスク</th><th>復旧可否・手順</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>解析後日報 JSON</b><br/>(① 取り込み対象)</td>
+            <td>buster の S3 <code>s3-link-dwh-json</code> に滞留</td>
+            <td><span class="badge bg-amber-100 text-amber-800">低</span><br/>ただし条件付き経年リスク:<br/>・S3 ライフサイクル → <b>本リポジトリ内に定義なし</b> (<code>grep -rn "LifecycleConfiguration" backend/buster</code> 0 件)。バケット定義自体が本スタック外 (別 IaC) のため、設定値は AWS コンソール要確認<br/>・SQS は <b>MessageRetentionPeriod (デフォルト 4 日 / 最大 14 日)</b> を超えると消滅</td>
+            <td><b>復旧可</b>: 取り込み Lambda を再有効化すれば SQS から順次処理。<br/>SQS 期限切れ時は S3 内 JSON 一覧から再キック必要。<br/>※strike 側にはオリジナルが残っていない (<code>strike/copy_data_to_dwh_and_master.py:45</code> で copy 後 <code>delete_object</code>)。<br/><b>最後の砦は buster S3 のみ</b> ← ライフサイクル実態の確認必須</td>
+          </tr>
+          <tr>
+            <td><b>マスタ CSV</b><br/>(④ 取り込み対象)</td>
+            <td>aegis 側 S3 に CSV 残存。多くは全件洗い替え</td>
+            <td><span class="badge bg-emerald-100 text-emerald-800">極めて低</span><br/>マスタの正は aegis 側の Aurora MySQL。CSV はエクスポート結果。</td>
+            <td><b>復旧可</b>: aegis 側の連携処理を再実行 / 再エクスポートで最新マスタが再配信。本アカウント DWH 上のマスタは古いまま動作 (再開後最新化)。</td>
+          </tr>
+          <tr>
+            <td><b>解析前生データ</b></td>
+            <td>strike アカウント側 S3 に残存</td>
+            <td><span class="badge bg-emerald-100 text-emerald-800">無</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><b>DWH 上の既存業務データ</b></td>
+            <td>Redshift に保持</td>
+            <td><span class="badge bg-emerald-100 text-emerald-800">無</span> (停止しても消えない)</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>5-3-3. 結論</h4>
+      <div class="callout-warn">
+        <p><b>完全欠損のリスクは極めて低い</b>。停止中も生データは前段の S3 に残るか、aegis の Aurora マスタに正がある。</p>
+        <p class="mt-2">ただし <b>2 つの条件付きリスク</b> がある:</p>
+        <ol class="list-decimal list-inside mt-1">
+          <li><code>s3-link-dwh-json</code> バケットの <b>ライフサイクルルール</b>。本リポジトリ内にバケット定義およびライフサイクル定義は存在せず、別 IaC で管理されているため、設定値は AWS コンソール要確認。取り込み停止期間より短い期限が設定されていれば JSON が消失する。</li>
+          <li>SQS <code>link_dwh_data</code> の <b>MessageRetentionPeriod</b>。本リポジトリ内にキュー定義も無く、設定値は要確認。停止期間が保持期間を超えると再開時に自動取り込みが走らない (手動キック必要)。</li>
+        </ol>
+        <p class="mt-2">上記 2 点を確認・調整しておけば、<b>取り込み停止 → 再開で自然復旧する</b>運用が成立する。</p>
+      </div>
+
+      <h3>5-4. 停止／再開の操作チェックリスト</h3>
+      <h4>停止時</h4>
+      <ul class="checklist">
+        <li>Lambda <code>buster-${EnvType}-get-json-from-strike</code> の Event Source Mapping (SQS <code>link_dwh_data</code>) を Disable</li>
+        <li>Lambda <code>buster-${EnvType}-sync-master-data-function</code> の Event Source Mapping (SQS <code>data_collect</code>) を Disable</li>
+        <li>(任意) <code>export-dwh-data-function</code> の Schedule を Disable</li>
+        <li>(任意) <code>export-dwh-redshift-data-function</code> の Schedule を Disable</li>
+        <li>(任意) <code>redshift-execute-status-manager-function</code> の Schedule を Disable</li>
+        <li>(任意) <code>retry-redshift-query-function</code> の Schedule を Disable</li>
+        <li><b>事前確認</b>: <code>s3-link-dwh-json</code> バケットの Lifecycle 設定</li>
+        <li><b>事前確認</b>: SQS <code>link_dwh_data</code> / <code>data_collect</code> の MessageRetentionPeriod (推奨 14 日)</li>
+        <li><b>事前確認</b>: aegis 側マスタ連携の S3 容量</li>
+        <li>Backlog/SNS 経由のアラート抑止を検討</li>
+      </ul>
+      <h4>再開時</h4>
+      <ul class="checklist">
+        <li>Event Source Mapping / Schedule を順に Enable</li>
+        <li>SQS にメッセージが残っていれば自動で取り込みが進む</li>
+        <li>SQS 期限切れ時は S3 内 JSON 一覧から再キック</li>
+        <li>取り込み完了後 <code>tmp/</code> 配下に残存 CSV があれば手動清掃</li>
+        <li>aegis に対しマスタ全件再連携を依頼</li>
+      </ul>
+
+      <h3>5-5. 残課題</h3>
+      <table>
+        <thead><tr><th>#</th><th>課題</th><th>本リポジトリ調査結果</th><th>確認先</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><code>taxi-cloud-buster-${EnvType}-s3-link-dwh-json</code> バケットの Lifecycle 設定実態</td>
+            <td><b>本リポジトリ内に定義なし</b>。<code>grep -rn "LifecycleConfiguration" backend/buster</code> 0 件。<code>AWS::S3::Bucket</code> 定義自体も <code>backend/buster/data_link_batch/template.yml</code> 内に存在せず、外部 IaC で管理されているため本リポジトリだけからは確定不可。</td>
+            <td>AWS コンソール (S3 > 当該バケット > Management) / 別 IaC リポジトリ</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><code>taxi-cloud-buster-${EnvType}-s3-msg-params-csv</code> バケットの Lifecycle 設定実態</td>
+            <td>同上、本リポジトリ内に定義なし</td>
+            <td>同上</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>SQS <code>link_dwh_data</code> / <code>data_collect</code> の MessageRetentionPeriod 実態</td>
+            <td>本リポジトリ内ではキュー本体も SSM 経由で参照のみ。<code>AWS::SQS::Queue</code> 定義は別 IaC</td>
+            <td>AWS コンソール (SQS > 当該キュー > Details)</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Redshift Serverless の Auto-pause 設定有無</td>
+            <td>本リポジトリでは workgroup 自体が別 IaC 管理。Auto-pause 設定もテンプレート内に存在せず</td>
+            <td>AWS コンソール (Redshift Serverless > Workgroup)</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>停止期間中の aegis → buster マスタ連携 SQS 滞留量</td>
+            <td>試算が必要</td>
+            <td>試算 (CSV 件数 × 配信頻度)</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>取り込み再開時の SQS 期限切れメッセージ再キック手順</td>
+            <td>コード上は再キック用ユーティリティなし</td>
+            <td>運用 Runbook の新規整備</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>Redshift 業務 TX (トランザクション) の保持運用</td>
+            <td>本リポジトリには物理削除実装なし → 無期限蓄積</td>
+            <td>運用方針 (例: 2 年で削除する場合の手順整備)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="mt-10 pt-6 border-t border-slate-200">
+      <h2 class="text-2xl font-bold">付録. 参考ファイル一覧</h2>
+      <table>
+        <thead><tr><th>ファイル</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td><code>taxi-cloud/backend/buster/data_link_batch/template.yml</code></td><td>アカウントの SAM テンプレート (本仕様の正)</td></tr>
+          <tr><td><code>taxi-cloud/backend/buster/data_link_batch/functions/*/</code></td><td>Lambda 6 本の実装</td></tr>
+          <tr><td><code>taxi-cloud/backend/buster/data_link_batch/layers/model.py</code></td><td>Redshift テーブル ↔ SQLAlchemy モデルマッピング</td></tr>
+          <tr><td><code>taxi-cloud/ddl/redshift/taxicloud/*.sql</code></td><td>Redshift DDL (全 56 ファイル)</td></tr>
+          <tr><td><code>taxi-cloud/backend/strike/functions/copy_data_to_dwh_and_master/</code></td><td>strike → buster へのファイル配送 (copy 後元 S3 削除)</td></tr>
+          <tr><td><code>taxi-cloud/backend/aegis/data_link_batch/functions/import_dwh_redshift_data/</code></td><td>aegis 側のバッチ③ 連携 CSV 取り込み (Aurora MySQL Upsert)</td></tr>
+          <tr><td><code>taxi-cloud/backend/duel/api/template.yml</code></td><td>duel 側の連携 SQS / Lambda 定義</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+</body>
+</html>

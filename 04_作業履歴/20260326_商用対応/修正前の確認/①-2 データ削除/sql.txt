@@ -1,0 +1,2 @@
+select * from taxicloud.eigyosyo_monthly_sales_target where cstm_cd in ('02000071','02000078');
+Delete from taxicloud.eigyosyo_monthly_sales_target where cstm_cd in ('02000071','02000078');

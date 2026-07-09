@@ -1,0 +1,144 @@
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '01', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '02', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '03', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '04', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '05', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '06', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '07', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '08', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '09', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '10', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '11', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '00000001', '12', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '01', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '02', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '03', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '04', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '05', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '06', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '07', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '08', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '09', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '10', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '11', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000071', '99999999', '12', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '01', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '02', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '03', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '04', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '05', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '06', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '07', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '08', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '09', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '10', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '11', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '00000001', '12', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '01', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '02', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '03', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '04', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '05', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '06', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '07', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '08', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '09', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '10', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '11', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);
+INSERT INTO taxicloud.eigyosyo_monthly_sales_target
+(cstm_cd, eigyosyo_cd, target_month, effective_month, expiration_month, current_flg, target_amount, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000078', '99999999', '12', '1990/12', NULL, 1, '50000000', NULL, NULL, NULL, NULL, NULL, 0, '2024-08-28 15:57:22', 'AGS008', 'AGS008', NULL, NULL, NULL, 0);

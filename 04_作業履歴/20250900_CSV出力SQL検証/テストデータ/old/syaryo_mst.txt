@@ -1,0 +1,21 @@
+INSERT INTO taxicloud.syaryo_mst (
+    syaryo_cd,
+    iccid,
+    cstm_cd,
+    eigyosyo_cd,
+    unyo_type,
+    unyo_type_nm,
+    meter_type,
+    meter_type_nm,
+    syaryo_nm,
+    delete_flg,
+    insert_datetime,
+    insert_user_id,
+    insert_business_id,
+    update_count
+) VALUES
+('S001', 'ICCID0000000000001', '19951115', '00000001', 1, '通常運用', 'A1', '標準メーター', '車両001', 0, NOW(), 'system', 'kaneko', 0),
+('S002', 'ICCID0000000000002', '19951115', '00000001', 1, '通常運用', 'A1', '標準メーター', '車両002', 0, NOW(), 'system', 'kaneko', 0),
+('S003', 'ICCID0000000000003', '19951115', '00000001', 1, '通常運用', 'A1', '標準メーター', '車両003', 0, NOW(), 'system', 'kaneko', 0),
+('S004', 'ICCID0000000000004', '19951115', '00000002', 1, '通常運用', 'A1', '標準メーター', '車両004', 0, NOW(), 'system', 'kaneko', 0),
+('S005', 'ICCID0000000000005', '19951115', '00000001', 1, '通常運用', 'A1', '標準メーター', '車両005', 0, NOW(), 'system', 'kaneko', 0);

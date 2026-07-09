@@ -1,0 +1,69 @@
+20250827 stg不要マスタデータ削除
+作業概要
+	①顧客マスタ・営業所マスタをバックアップをローカルに出力（フォーマットは問わない）
+	②矢崎ドライブにアップロード保存しておく
+	③対象を物理削除
+
+作業詳細
+	①顧客マスタ・営業所マスタをバックアップをローカルに出力（フォーマットは問わない）
+		DBeaber、テーブル右クリックから出力可能(Devで検証済み)
+
+	②対象データ削除の条件を作成
+		削除は消す
+		白は残す
+		黄色は残す
+
+	③
+
+営業所マスタ
+顧客マスタ
+
+blitzにいるかも
+	環境によって件数が違う可能性がある
+
+
+
+■AWSアカウント
+・aegis
+・duel
+・buster？
+・blitz？
+
+■対象エンティティ
+・顧客マスタ（PK：顧客コードcstm_cd）
+・営業所マスタ（PK：顧客コードcstm_cd、営業所コードeigyosyo_cd）
+
+
+https://cloudpack.slack.com/archives/C026EBWMD2M/p1756260543789349?thread_ts=1756260378.453879&cid=C026EBWMD2M
+
+
+お疲れ様です。
+現在,stg,duel環境step function料金増加に係る顧客,営業所マスタデータの削除対応の作業手順を作成中です。
+1点質問事項があるため教えていただきたいです。
+
+・知りたいこと
+	顧客,営業所マスタデータはbuster,blittz環境でも使用されているか。
+
+・詳細
+	データ同期の観点から、他環境で同期前提のマスタ等がある場合は今回のデータ削除対象とする必要があると考えています。
+	aegisには同マスタが存在するため今回の削除対象とするという所までは判明しているのですが、
+	buster,blitzでは顧客マスタ,営業所マスタと同期前提のマスタが存在しているか把握できていないため
+	上記もしご存じであれば教えていただきたいです。
+・参考
+	チケット:https://aws-plus.backlog.jp/view/YAZAKIES_TAXICLOUD_OPS-247
+	作業情報:https://cloudpack.slack.com/archives/C026EBWMD2M/p1756260543789349?thread_ts=1756260378.453879&cid=C026EBWMD2M
+
+
+
+'<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n<product>\n  <dataconf>\n    <conf>data</conf>\n  </dataconf>\n  <prodIdInfo>\n    <infoId>00000017114787</infoId>\n    <category0>0002</category0>\n    <name0>交通</name0>\n    <category1>00020001</category1>\n    <name1>鉄道情報</name1>\n    <category2/>\n    <name2/>\n    <publishTime>2025-08-08T19:45:00+09:00</publishTime>\n    <followupNum>00000017147999</followupNum>\n    <limitTime/>\n    <levelInfo>4</levelInfo>\n    <areaKbn>04</areaKbn>\n    <levelEarea/>\n    <upDelFg>E</upDelFg>\n  </prodIdInfo>\n  <body>\n    <title>福井鉄道線 平常運転</title>\n    <text1>19:45現在、ほぼ平常通り運転しています。</text1>\n    <text2>19:45現在、ほぼ平常通り運転しています。</text2>\n    <area>\n      <levelInfo>4</levelInfo>\n      <p0>\n        <code>1</code>\n        <name>日本</name>\n      </p0>\n      <p1>\n        <code>05</code>\n        <name>中部</name>\n      </p1>\n      <p2>\n        <code>0565</code>\n        <name>福井鉄道</name>\n      </p2>\n      <p3>\n        <code>0565</code>\n        <name>福井鉄道線</name>\n      </p3>\n      <p4>\n        <code>0</code>\n        <name/>\n      </p4>\n      <p5>\n        <code>0</code>\n        <name/>\n      </p5>\n      <note/>\n    </area>\n  </body>\n  <attribute>\n    <common/>\n    <detail>\n      <occurrenceTime/>\n      <switchingTime>2025-08-08T19:45:00+09:00</switchingTime>\n      <switchingTime_sup/>\n      <event>\n        <stationCode1/>\n        <station1/>\n        <stationCode2/>\n        <station2/>\n        <causeCode>1011</causeCode>\n        <cause>車両故障</cause>\n        <cause_sup/>\n        <upDown_code/>\n        <upDown/>\n      </event>\n      <impact>\n        <stationCode1/>\n        <station1/>\n        <stationCode2/>\n        <station2/>\n        <stationCode3/>\n        <station3/>\n        <upDown_code/>\n        <upDown/>\n      </impact>\n      <statusCode>06</statusCode>\n      <statusName>平常運転</statusName>\n      <status_sup1>一部</status_sup1>\n      <status_sup2/>\n      <situation>運休や運転変更</situation>\n      <transfer/>\n      <prefCode>18</prefCode>\n    </detail>\n  </attribute>\n</product>\n'
+
+
+
+    attribute_tag = soup.find_all("attribute")
+    for attribute in attribute_tag:
+        detail_tag = attribute.find_all("detail")
+        for detail in detail_tag:
+            # カテゴリ小分類コード
+            category2 = detail.find("statuscode").get_text(strip=True)
+            # カテゴリ小分類名
+            name2 = detail.find("statusname").get_text(strip=True)

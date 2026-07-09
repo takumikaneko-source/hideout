@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>業務改善事例 — DWH 設計書ゼロから作成</title>
+<style>
+  :root {
+    --paper: #fdf6e3;
+    --paper-2: #f5ebd0;
+    --ink: #1a3a52;
+    --ink-soft: #3a5a72;
+    --accent: #e67e22;
+    --accent-2: #f1c40f;
+    --green: #27ae60;
+    --green-soft: #d4efdf;
+    --red: #c0392b;
+    --blue: #2980b9;
+    --purple: #8e44ad;
+    --line: #c8a96a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+  body {
+    font-family: 'Hiragino Maru Gothic ProN', 'Yu Gothic UI', 'M PLUS Rounded 1c', 'Comic Sans MS', system-ui, sans-serif;
+    line-height: 1.7;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(230,126,34,0.06) 0, transparent 30%),
+      radial-gradient(circle at 80% 60%, rgba(41,128,185,0.05) 0, transparent 35%),
+      repeating-linear-gradient(0deg, rgba(200,169,106,0.06) 0 1px, transparent 1px 28px);
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 28px 80px; }
+
+  /* タイトル */
+  .badge-top {
+    display: inline-block; background: var(--ink); color: var(--paper);
+    padding: 6px 16px; border-radius: 999px; font-size: 0.78rem;
+    letter-spacing: 0.2em; font-weight: 700;
+    transform: rotate(-1.5deg);
+  }
+  h1.title {
+    font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.3;
+    margin: 14px 0 6px; font-weight: 900; color: var(--ink);
+    text-shadow: 2px 2px 0 var(--accent-2);
+  }
+  h1.title .underline { background: linear-gradient(transparent 60%, var(--accent-2) 60%); padding: 0 4px; }
+  .subtitle {
+    font-size: 1.05rem; color: var(--ink-soft);
+    border-left: 6px solid var(--accent); padding: 6px 12px; margin: 14px 0 0;
+    background: rgba(230,126,34,0.06);
+  }
+
+  /* セクション見出し */
+  h2.section {
+    font-size: 1.4rem; margin: 48px 0 18px; color: var(--ink);
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 3px dashed var(--line); padding-bottom: 8px;
+  }
+  h2.section .emoji { font-size: 1.6rem; }
+
+  /* ハイライト 2 カード */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+  .card {
+    background: white; border: 3px solid var(--ink);
+    border-radius: 18px; padding: 22px 22px 20px;
+    box-shadow: 6px 6px 0 var(--line);
+    position: relative;
+  }
+  .card .label {
+    position: absolute; top: -14px; left: 16px;
+    background: var(--ink); color: var(--paper);
+    padding: 2px 12px; border-radius: 999px;
+    font-size: 0.75rem; letter-spacing: 0.12em;
+  }
+  .card.after { border-color: var(--green); }
+  .card.after .label { background: var(--green); }
+  .card.after .head { color: var(--green); }
+  .card .head {
+    font-size: 1.2rem; font-weight: 800; margin: 6px 0 10px; color: var(--ink);
+  }
+  .card ul { margin: 8px 0 0; padding-left: 20px; }
+  .card li { margin: 6px 0; }
+  .big-num {
+    font-size: 2.6rem; font-weight: 900; color: var(--green);
+    line-height: 1; margin-top: 6px; display: inline-block;
+    background: var(--green-soft); padding: 6px 14px; border-radius: 12px;
+    transform: rotate(-2deg);
+  }
+
+  /* プロセス */
+  .step {
+    background: white; border: 2.5px solid var(--ink);
+    border-radius: 16px; padding: 18px 22px 16px;
+    box-shadow: 5px 5px 0 var(--line);
+    margin: 16px 0; position: relative;
+  }
+  .step-no {
+    position: absolute; top: -18px; left: -18px;
+    background: var(--accent); color: white;
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 900; border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--line);
+  }
+  .step h3 { margin: 0 0 6px 36px; font-size: 1.1rem; color: var(--ink); }
+  .step .desc { color: var(--ink-soft); margin-bottom: 12px; }
+  .prompt-box {
+    background: var(--paper-2); border: 2px dashed var(--line);
+    border-radius: 10px; padding: 12px 14px; position: relative;
+    margin: 10px 0;
+  }
+  .prompt-tag {
+    display: inline-block; background: var(--blue); color: white;
+    padding: 2px 10px; border-radius: 999px; font-size: 0.72rem;
+    margin-bottom: 6px; letter-spacing: 0.08em;
+  }
+  .prompt-text {
+    font-family: ui-monospace, Menlo, 'Hiragino Maru Gothic ProN', sans-serif;
+    font-size: 0.88rem; white-space: pre-wrap; color: var(--ink);
+    margin-top: 2px;
+  }
+  .copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--ink); color: var(--paper); border: none;
+    border-radius: 8px; padding: 4px 10px; font-size: 0.72rem;
+    cursor: pointer; font-family: inherit;
+  }
+  .copy-btn:hover { background: var(--accent); }
+  .memo, .tips {
+    border-left: 5px solid; padding: 8px 12px; border-radius: 6px;
+    margin: 8px 0; font-size: 0.92rem;
+  }
+  .memo { background: #fef9e7; border-color: var(--accent-2); color: var(--ink); }
+  .tips { background: #fdedec; border-color: var(--red); color: #4d1f1a; }
+  .arrow {
+    text-align: center; font-size: 2rem; color: var(--accent);
+    margin: -4px 0 -4px;
+  }
+
+  /* 汎用プロンプト集 */
+  .prompts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .prompts-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .prompts-grid { grid-template-columns: 1fr; } }
+  .ptag {
+    background: white; border: 2.5px solid var(--ink); border-radius: 14px;
+    padding: 14px 14px 12px; cursor: pointer;
+    box-shadow: 4px 4px 0 var(--line);
+    transition: transform 0.1s ease;
+    text-align: left; font-family: inherit;
+  }
+  .ptag:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--line); }
+  .ptag .icon { font-size: 1.8rem; }
+  .ptag .ptitle { font-weight: 800; margin: 6px 0 2px; color: var(--ink); }
+  .ptag .pdesc { font-size: 0.8rem; color: var(--ink-soft); }
+
+  /* モーダル */
+  .modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(26,58,82,0.5);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--paper); border: 3px solid var(--ink); border-radius: 18px;
+    max-width: 680px; width: 100%; max-height: 80vh; overflow: auto;
+    padding: 24px; box-shadow: 8px 8px 0 var(--line);
+    position: relative;
+  }
+  .modal h3 { margin-top: 0; color: var(--ink); }
+  .modal .close {
+    position: absolute; top: 12px; right: 14px;
+    background: var(--ink); color: var(--paper); border: none;
+    width: 32px; height: 32px; border-radius: 50%; font-size: 1rem;
+    cursor: pointer; font-family: inherit;
+  }
+  .modal pre {
+    background: white; border: 2px dashed var(--line);
+    padding: 12px; border-radius: 10px; white-space: pre-wrap;
+    font-family: ui-monospace, Menlo, sans-serif; font-size: 0.85rem;
+  }
+
+  /* フッター */
+  footer {
+    margin-top: 60px; text-align: center; font-size: 0.78rem;
+    color: var(--ink-soft); border-top: 2px dashed var(--line); padding-top: 16px;
+  }
+  .save-path {
+    background: var(--paper-2); border: 2px dashed var(--line);
+    padding: 8px 14px; border-radius: 999px; display: inline-block;
+    font-family: ui-monospace, monospace; font-size: 0.82rem;
+    color: var(--ink); margin: 8px 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 1. タイトル -->
+  <header>
+    <span class="badge-top">IMPROVEMENT CASE</span>
+    <h1 class="title">設計書ゼロのアカウントを<br><span class="underline">AIで「読める仕様書」</span>に化けさせた話</h1>
+    <p class="subtitle">対象業務：TAXI-Cloud『DWH (buster) アカウント』の仕様可視化 — 既存の設計書が存在せず、ソースコードから事実ベースで設計書を起こす必要があった</p>
+  </header>
+
+  <!-- 2. ハイライト -->
+  <h2 class="section"><span class="emoji">🚀</span>今回のポイント：何をして、どう楽になったか</h2>
+  <div class="grid-2">
+    <div class="card">
+      <span class="label">やったこと (B)</span>
+      <div class="head">📚 AI にソース全件横断＋反復改善で設計書を一気通貫生成</div>
+      <ul>
+        <li>SAM テンプレート・Lambda 6 本・DDL 56 ファイルを AI に横断調査させ、『DWH アカウント = buster』を特定</li>
+        <li>インフラ構成図 (Mermaid) ・AWS リソース・バッチ仕様・全 56 テーブル定義・料金削減案を一括で md 化</li>
+        <li>レビュー指摘（TX→トランザクション表記、保持期間の事実ベース化、S3 ライフサイクル実態、連携先アカウントの利用処理…）を反復で取り込み</li>
+        <li>最終的に外部 CDN を読みつつ顧客提示できる HTML へ整形</li>
+      </ul>
+    </div>
+    <div class="card after">
+      <span class="label">楽になったこと (C)</span>
+      <div class="head">⏱ 設計書作成が圧倒的に時短／仕様把握が同時に進む</div>
+      <ul>
+        <li>そもそも『設計書がない』状態だったため、本来はソースを 1 ファイルずつ読み解く必要があった</li>
+        <li>AI に依頼することで <b>仕様の把握と設計書化が同時並行</b> で進み、頭の中の整理コストも激減</li>
+        <li>56 テーブル × カラム羅列のような『気合い作業』を全件漏れなく自動列挙</li>
+        <li>レビュー指摘の反映も <b>都度数分</b>。お客様提示できる粒度まで一気に持ち上がった</li>
+      </ul>
+      <div class="big-num">作業数日 → 半日</div>
+    </div>
+  </div>
+
+  <!-- 3. プロセスフロー -->
+  <h2 class="section"><span class="emoji">👣</span>PROCESS - 実施のステップ</h2>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-no">1</div>
+    <h3>『どのアカウントが DWH か』をソースコードから特定させる</h3>
+    <div class="desc">設計書がないため、まずは AI に対象アカウントの特定そのものを依頼。onboarding.html・各 template.yml・Lambda コードを横断調査させ、buster = DWH アカウントと結論を得る。</div>
+    <div class="prompt-box">
+      <span class="prompt-tag">仕様抽出</span>
+      <button class="copy-btn" data-copy="p1">📋コピー</button>
+      <div class="prompt-text" id="p1">DWHアカウントの仕様を可視化してください。ソース『TAXI-Cloud』を参照してください。
+インフラ構成（表・構成図）／AWSリソース／バッチの本数と個別設計／DB構成（テーブル定義・保持サイクル・暗号化）を含めてまとめてください。</div>
+    </div>
+    <div class="memo">💡<b>メモ</b>：「対象どこ？」から AI に投げる。設計書がない案件では『特定 → 集約 → 整形』を一気に依頼すると思考が乗りやすい。</div>
+    <div class="tips">🔥<b>TIPS</b>：いきなり HTML を依頼せず、まず md で全体像を確定する。レビュー往復のコストが段違いに下がる。</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="step-no">2</div>
+    <h3>顧客向け『料金削減施策』として観点を後付けで追加</h3>
+    <div class="desc">技術仕様だけでなく『取り込み停止でコストが下がるか／データは欠損しないか』という顧客視点の問いを追加。AI に効果試算と復旧可否（前段 S3／aegis Aurora マスタが正の存在）まで分析させる。</div>
+    <div class="prompt-box">
+      <span class="prompt-tag">分析・観点追加</span>
+      <button class="copy-btn" data-copy="p2">📋コピー</button>
+      <div class="prompt-text" id="p2">章立てを追加して『料金削減施策』として記載してください。
+確認したいこと：取り込み処理トリガーを止めて Redshift への格納を停止することで料金削減が可能か。
+有効性、停止するトリガーのリスト化、データが将来的に欠損するものがあるか、他アカウントや前段 S3 にデータが残っていて復旧可能かを整理してください。</div>
+    </div>
+    <div class="memo">💡<b>メモ</b>：『お客様に伝える』粒度を指定すると、SQL や AWS リソース名が顧客向け説明文に翻訳される。</div>
+    <div class="tips">🔥<b>TIPS</b>：『完全欠損リスクは？』のような Yes/No 質問を立てると、AI が前段データの所在まで遡って根拠を示してくれる。</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="step-no">3</div>
+    <h3>『推測』を排除し、ソース根拠の事実ベースに磨き込む</h3>
+    <div class="desc">初版に残っていた『保持期間 2 年 (onboarding.html 由来)』のような曖昧な記述を排除。AI に再調査させ、Redshift TTL の有無・S3 ライフサイクル設定の所在・DynamoDB の TimeToLive 未設定をソース根拠付きで確定。</div>
+    <div class="prompt-box">
+      <span class="prompt-tag">事実ベース校閲</span>
+      <button class="copy-btn" data-copy="p3">📋コピー</button>
+      <div class="prompt-text" id="p3">テーブル定義は代表ではなく事実を確実に漏れなく記載してください。
+データ保持サイクルは onboarding.html ではなくソースコードから事実の保持期間を記載してください。Redshift テーブルのレコード保持期間、TTL の有無も明記。
+S3 ライフサイクルルールについても実態を調査して記載し、料金削減案の完全欠損リスクにも反映してください。</div>
+    </div>
+    <div class="memo">💡<b>メモ</b>：『代表ではなく漏れなく』『推測ではなくソース根拠』のキーワードで、AI の出力品質が一段上がる。</div>
+    <div class="tips">🔥<b>TIPS</b>：grep 結果や行番号付き引用を要求すると、後で人がレビューする時に裏取りが一瞬で終わる。</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <div class="step-no">4</div>
+    <h3>md → 1 枚 HTML へ整形し、社内・顧客に共有可能な形へ</h3>
+    <div class="desc">最後に Tailwind + Mermaid ベースの HTML 化を依頼。目次サイドバー・バッチカード・SQL コードブロック・色分けバッジ・ER 図 / 構成図を含む 1 枚ドキュメントへ。社内レビュー・顧客提示の両方で使える状態にする。</div>
+    <div class="prompt-box">
+      <span class="prompt-tag">整形・可視化</span>
+      <button class="copy-btn" data-copy="p4">📋コピー</button>
+      <div class="prompt-text" id="p4">この md を HTML 化してください。
+構成図と ER 図は Mermaid で描画、バッチ仕様はカード型レイアウト、実行 SQL はコードブロックで読みやすく、料金削減効果はバッジで視覚化してください。
+左に目次サイドバーを置いて長いドキュメントでも回遊できるようにしてください。</div>
+    </div>
+    <div class="memo">💡<b>メモ</b>：HTML 化は md が固まってからまとめて依頼する。途中で HTML を作ると指摘反映がしんどい。</div>
+    <div class="tips">🔥<b>TIPS</b>：Mermaid・コードブロック・色分けバッジを明示指定すると『箇条書きの長文』にならず、グラフィカルな成果物が出る。</div>
+  </div>
+
+  <!-- 4. 汎用プロンプト集 -->
+  <h2 class="section"><span class="emoji">🎒</span>持ち帰り用：汎用プロンプト集（クリックで詳細）</h2>
+  <div class="prompts-grid">
+    <button class="ptag" data-tag="tag1">
+      <div class="icon">🔍</div>
+      <div class="ptitle">仕様抽出</div>
+      <div class="pdesc">設計書ゼロのコードベースから仕様を起こす</div>
+    </button>
+    <button class="ptag" data-tag="tag2">
+      <div class="icon">🗺️</div>
+      <div class="ptitle">構成図化</div>
+      <div class="pdesc">テキスト指示で Mermaid 構成図を生成</div>
+    </button>
+    <button class="ptag" data-tag="tag3">
+      <div class="icon">💬</div>
+      <div class="ptitle">顧客向け翻訳</div>
+      <div class="pdesc">システム用語を顧客説明文に変換</div>
+    </button>
+    <button class="ptag" data-tag="tag4">
+      <div class="icon">🔁</div>
+      <div class="ptitle">反復改善</div>
+      <div class="pdesc">レビュー指摘を一括で取り込ませる</div>
+    </button>
+    <button class="ptag" data-tag="tag5">
+      <div class="icon">📏</div>
+      <div class="ptitle">事実根拠の校閲</div>
+      <div class="pdesc">推測を排除しソース根拠だけで構成</div>
+    </button>
+    <button class="ptag" data-tag="tag6">
+      <div class="icon">🎨</div>
+      <div class="ptitle">HTML 整形</div>
+      <div class="pdesc">md を 1 枚の閲覧用 HTML に変換</div>
+    </button>
+  </div>
+
+  <!-- モーダル -->
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <button class="close" id="modal-close">✕</button>
+      <h3 id="modal-title"></h3>
+      <p id="modal-desc"></p>
+      <pre id="modal-pre"></pre>
+      <button class="copy-btn" id="modal-copy" style="position: static; margin-top: 12px;">📋 プロンプトをコピー</button>
+    </div>
+  </div>
+
+  <footer>
+    <div>保存先：<span class="save-path">/Users/hi-mitsui/Downloads/dwh_improvement_case.html</span></div>
+    <div>本グラレコは『TAXI-Cloud / DWH (buster) 仕様化』案件のチャット記録を基に作成 — 部内共有用</div>
+  </footer>
+
+</div>
+
+<script>
+  // コピーボタン
+  document.querySelectorAll('.copy-btn[data-copy]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const id = btn.getAttribute('data-copy');
+      const el = document.getElementById(id);
+      if (!el) return;
+      const text = el.innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        const original = btn.innerText;
+        btn.innerText = '✅ コピー済';
+        setTimeout(function(){ btn.innerText = original; }, 1500);
+      });
+    });
+  });
+
+  // 汎用プロンプト集データ
+  const prompts = {
+    tag1: {
+      title: '🔍 仕様抽出プロンプト',
+      desc: 'ソースだけ存在し設計書がない案件で、対象範囲を特定しつつ仕様化させる。',
+      text: [
+        '対象システム『XXX』のソースコードを横断調査し、以下を 1 つのドキュメントにまとめてください。',
+        '',
+        '1. アカウント／コンポーネントの特定（どれが対象機能を担うか）',
+        '2. 構成図（外部依存・内部処理・データストアを 1 枚で）',
+        '3. 主要リソース一覧（種別・名称・用途）',
+        '4. バッチ／API ごとに：処理概要／トリガー／取得元／連携先／処理内容／実行 SQL',
+        '5. DB 構成（テーブル分類・主要テーブル定義）',
+        '',
+        '設計書が存在しないため、推測は避け、ソースコードに直接書かれている事実のみを根拠としてください。'
+      ].join('\n')
+    },
+    tag2: {
+      title: '🗺️ 構成図化プロンプト',
+      desc: 'Mermaid 記法で構成図／ER 図を生成させる。',
+      text: [
+        '以下の情報を Mermaid 記法で構成図にしてください。',
+        '',
+        '- 外部システム／自アカウント／データストアをそれぞれ subgraph で分け、矢印の方向（誰が誰にデータを送るか）が明確に見えるようにしてください。',
+        '- 主要な処理（Lambda・ECS・キュー）はノードとして表現してください。',
+        '- 自アカウントのリソースは強調色、外部は別色で分類してください。',
+        '',
+        '対象システム情報：（ここにリソース一覧を貼り付け）'
+      ].join('\n')
+    },
+    tag3: {
+      title: '💬 顧客向け翻訳プロンプト',
+      desc: 'システム用語をお客様向け文書に翻訳。',
+      text: [
+        '以下のシステム仕様を、エンジニアではない『お客様』に説明する文章に書き直してください。',
+        '',
+        '- 専門用語（COPY／UNLOAD／IAM Role など）はそのまま使わず、何をしているかを 1 文で言い換えてください。',
+        '- 処理単位ごとに『何のために動いているのか』を冒頭に置いてください。',
+        '- SQL を含める場合は、SQL の前に『この処理では次のクエリを実行しています』と一言添えてください。',
+        '',
+        '対象：（ここに仕様の元文章を貼り付け）'
+      ].join('\n')
+    },
+    tag4: {
+      title: '🔁 反復改善プロンプト',
+      desc: 'レビュー指摘を一括反映させる。',
+      text: [
+        '先ほどの成果物に対して、以下の指摘を一度に反映してください。',
+        '反映対象は md と HTML の両方です。',
+        '',
+        '1. （指摘 1）',
+        '2. （指摘 2）',
+        '3. （指摘 3）',
+        '',
+        '反映後、変更したセクションの差分要約を最後に短く出力してください。'
+      ].join('\n')
+    },
+    tag5: {
+      title: '📏 事実根拠の校閲プロンプト',
+      desc: '推測を排除しソース根拠だけで再構成する。',
+      text: [
+        '現在のドキュメントから『推測』『運用方針由来』の記述を排除し、ソースコード／IaC に直接書かれている事実だけに基づいて再構成してください。',
+        '',
+        '- 数値や期間（例：保持 2 年）は、根拠ファイル名と行番号を併記してください。',
+        '- ソースに該当する記述がない場合は、その旨を明示し『要 AWS コンソール確認』など確認先を併記してください。',
+        '- 確定できなかった項目は『残課題』表にまとめてください。'
+      ].join('\n')
+    },
+    tag6: {
+      title: '🎨 HTML 整形プロンプト',
+      desc: 'md を 1 枚の閲覧用 HTML に変換する。',
+      text: [
+        'この md を 1 枚の HTML に変換してください。',
+        '',
+        '- Tailwind CDN または同等の軽量 CSS を使用',
+        '- 構成図／ER 図は Mermaid で描画',
+        '- 各セクションへジャンプできる目次サイドバーを左側に固定表示',
+        '- バッチ仕様はカード型レイアウト、SQL は黒背景のコードブロック',
+        '- 色分けバッジで『大／中／小』などの強弱を視覚化',
+        '- 重要な注意事項は callout（黄／青／赤）で囲む'
+      ].join('\n')
+    }
+  };
+
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalDesc = document.getElementById('modal-desc');
+  const modalPre = document.getElementById('modal-pre');
+  const modalCopy = document.getElementById('modal-copy');
+  const modalClose = document.getElementById('modal-close');
+
+  document.querySelectorAll('.ptag').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const key = btn.getAttribute('data-tag');
+      const p = prompts[key];
+      if (!p) return;
+      modalTitle.innerText = p.title;
+      modalDesc.innerText = p.desc;
+      modalPre.innerText = p.text;
+      modalCopy.innerText = '📋 プロンプトをコピー';
+      modal.classList.add('show');
+    });
+  });
+  modalClose.addEventListener('click', function(){ modal.classList.remove('show'); });
+  modal.addEventListener('click', function(e){
+    if (e.target === modal) modal.classList.remove('show');
+  });
+  modalCopy.addEventListener('click', function(){
+    navigator.clipboard.writeText(modalPre.innerText).then(function(){
+      modalCopy.innerText = '✅ コピー済';
+      setTimeout(function(){ modalCopy.innerText = '📋 プロンプトをコピー'; }, 1500);
+    });
+  });
+</script>
+</body>
+</html>

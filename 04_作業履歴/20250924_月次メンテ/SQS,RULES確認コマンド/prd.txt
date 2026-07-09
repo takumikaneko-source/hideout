@@ -1,0 +1,5 @@
+・SQS
+aws lambda list-event-source-mappings --query 'EventSourceMappings[?starts_with(EventSourceArn, `arn:aws:sqs`)].{Function:FunctionArn, SQS_ARN:EventSourceArn, State:State}' --output table --profile yzk-duel-prd | Tee-Object -FilePath "$HOME\yzk-duel-prd_SQStrigger_$(Get-Date -Format 'yyyyMMddHHmmss').txt"
+
+・EventBridge
+aws events list-rules --query 'Rules[].{Name:Name, State:State, Schedule:ScheduleExpression}' --output table --profile yzk-duel-prd | Tee-Object -FilePath "$HOME\yzk-duel-prd_EventBridge_$(Get-Date -Format 'yyyyMMddHHmmss').txt"

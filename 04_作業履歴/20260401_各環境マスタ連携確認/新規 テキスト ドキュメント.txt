@@ -1,0 +1,35 @@
+-- New script in 【DEV4】yzk-duel-dev4.
+-- Date: 2026 Apr 1
+-- Time: 01:30:09
+
+
+SELECT 
+    'eigyosyo_monthly_sales_target' AS table_name, 
+    COUNT(*) AS record_count 
+FROM eigyosyo_monthly_sales_target 
+UNION ALL
+SELECT 'eigyosyo_daily_sales_target', COUNT(*) FROM eigyosyo_daily_sales_target UNION ALL
+SELECT 'jomuin_monthly_sales_target', COUNT(*) FROM jomuin_monthly_sales_target UNION ALL
+SELECT 'jomuin_daily_sales_target', COUNT(*) FROM jomuin_daily_sales_target UNION ALL
+SELECT 'jomuin_mst_sales_target', COUNT(*) FROM jomuin_mst_sales_target UNION ALL
+SELECT 'alert_setting', COUNT(*) FROM alert_setting UNION ALL
+SELECT 'jomuin_mst_alert_setting', COUNT(*) FROM jomuin_mst_alert_setting UNION ALL
+SELECT 'disposalday_mst', COUNT(*) FROM disposalday_mst UNION ALL
+SELECT 'client_mst', COUNT(*) FROM client_mst UNION ALL
+SELECT 'eigyokuiki_mst', COUNT(*) FROM eigyokuiki_mst UNION ALL
+SELECT 'eigyosyo_mst', COUNT(*) FROM eigyosyo_mst UNION ALL
+SELECT 'kanrisya_mst', COUNT(*) FROM kanrisya_mst UNION ALL
+SELECT 'kokyaku_mst', COUNT(*) FROM kokyaku_mst UNION ALL
+SELECT 'sikutyoson_mst', COUNT(*) FROM sikutyoson_mst UNION ALL
+SELECT 'syaryo_mst', COUNT(*) FROM syaryo_mst UNION ALL
+SELECT 'untentiten_mst', COUNT(*) FROM untentiten_mst UNION ALL
+SELECT 'user_mst', COUNT(*) FROM user_mst UNION ALL
+SELECT 'userarea_l_mst', COUNT(*) FROM userarea_l_mst UNION ALL
+SELECT 'userarea_mst', COUNT(*) FROM userarea_mst UNION ALL
+SELECT 'userarea_p_mst', COUNT(*) FROM userarea_p_mst UNION ALL
+SELECT 'daily_pdf_tbl', COUNT(*) FROM daily_pdf_tbl UNION ALL
+SELECT 'service_mst', COUNT(*) FROM service_mst UNION ALL
+SELECT 'syasyu_mst', COUNT(*) FROM syasyu_mst UNION ALL
+SELECT 'kubun_mst', COUNT(*) FROM kubun_mst
+
+ORDER BY table_name;

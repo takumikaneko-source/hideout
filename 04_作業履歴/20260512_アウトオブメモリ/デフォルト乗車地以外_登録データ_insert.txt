@@ -1,0 +1,105 @@
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '00', '00', '中区小町', '0', NULL, 1.00, 2200.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '00', '00', '南区宇品神田3', '0', NULL, 1.00, 3200.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '01', '00', '中区胡町', '0', NULL, 2.00, 3900.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '01', '00', '市民病院', '0', NULL, 1.00, 2700.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '02', '00', '中区流川町', '0', NULL, 2.00, 7700.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '03', '00', '安佐南区伴東7', '0', NULL, 1.00, 2200.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '07', '00', '南区西蟹屋4', '0', NULL, 1.00, 1400.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '07', '00', '東区上大須賀町', '0', NULL, 1.00, 2300.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '08', '00', '中区幟町', '0', NULL, 1.00, 1300.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '08', '00', '西区天満町', '0', NULL, 1.00, 1900.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '09', '00', 'Ｈマイステイズ', '0', NULL, 1.00, 1800.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '09', '00', '東区上大須賀町', '0', NULL, 1.00, 1800.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '10', '00', '南区松原町', '0', NULL, 1.00, 3200.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '10', '00', '西区三篠町3', '0', NULL, 1.00, 1800.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '11', '00', '中区吉島西1', '0', NULL, 1.00, 1400.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '12', '00', '南区段原日出1', '0', NULL, 2.00, 3180.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '13', '00', '中区胡町', '0', NULL, 2.00, 3300.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '14', '00', 'ララシャンス', '0', NULL, 2.00, 4900.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '15', '00', '中区東平塚町', '0', NULL, 1.00, 1200.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '15', '00', '南区松原町', '0', NULL, 1.00, 1300.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '16', '00', '中区大手町3', '0', NULL, 2.00, 4000.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '17', '00', '中区東千田町1', '0', NULL, 2.00, 3800.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '18', '00', '中区昭和町', '0', NULL, 4.00, 4700.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '19', '00', '中区流川町', '0', NULL, 1.00, 1200.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '20', '00', '中区新天地', '0', NULL, 1.00, 4600.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '20', '00', '国際会議場', '0', NULL, 1.00, 1300.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '21', '00', '中区堺町1', '0', NULL, 1.00, 2000.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '21', '00', '西区草津東2', '0', NULL, 1.00, 1800.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '22', '00', '中区榎町', '0', NULL, 1.00, 1700.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '22', '00', '府中町浜田1', '0', NULL, 1.00, 3700.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '22', '00', '東区矢賀新町4', '0', NULL, 1.00, 900.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '23', '00', '中区大手町5', '0', NULL, 2.00, 2800.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '23', '00', '南区松原町', '0', NULL, 1.00, 900.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '23', '00', '市民病院', '0', NULL, 1.00, 2300.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);
+INSERT INTO taxicloud.eigyo_flat
+(cstm_cd, eigyosyo_cd, jomuin_cd, jomuin_nm, sales_year, sales_month, org_sales_month, sales_hour, kbn_cd, zyosyati_siku_area, kyujitsu_flg, geisya_umu, ave_eigyo_cnt, ave_kin, insert_datetime, insert_user_id, insert_business_id, update_count)
+VALUES('02000102', '00000001', '005293', '東　義人', 2026, '2026/04', '2026/04', '23', '00', '西区西観音町', '0', NULL, 1.00, 1600.00, '2026-05-22 16:27:09', 'DUEXXX', 'DUEXXX', 0);

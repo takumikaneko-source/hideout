@@ -1,0 +1,24 @@
+-- jomuin_mst の更新
+UPDATE taxicloud.jomuin_mst
+SET cstm_cd = '02000081', eigyosyo_cd = '99999999'
+WHERE cstm_cd = '19951115';
+
+-- syaryo_mst の更新
+UPDATE taxicloud.syaryo_mst
+SET cstm_cd = '02000081', eigyosyo_cd = '99999999'
+WHERE cstm_cd = '19951115';
+
+-- kubun_mst の更新
+UPDATE taxicloud.kubun_mst
+SET cstm_cd = '02000081', eigyosyo_cd = '99999999'
+WHERE cstm_cd = '19951115';
+
+-- unko_flat (当月・前月データ) の更新
+UPDATE taxicloud.unko_flat
+SET cstm_cd = '02000081', eigyosyo_cd = '99999999'
+WHERE cstm_cd = '19951115';
+
+-- eigyo_flat の更新
+UPDATE taxicloud.eigyo_flat
+SET cstm_cd = '02000081', eigyosyo_cd = '99999999'
+WHERE cstm_cd = '19951115';

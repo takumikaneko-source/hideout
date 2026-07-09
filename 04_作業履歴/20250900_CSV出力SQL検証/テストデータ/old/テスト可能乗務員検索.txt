@@ -1,0 +1,38 @@
+
+-- 以下検証用に使用できる乗務員パラメータ検索。対象月は適宜変更すること。
+
+WITH
+-- ステップ1: unko_flatから対象月の乗務員を先に抽出
+unko_drivers AS (
+    SELECT DISTINCT cstm_cd, eigyosyo_cd, jomuin_cd
+    FROM taxicloud.unko_flat
+    WHERE sales_month = '2024/09' --  検索したい年月をここに指定
+),
+-- ステップ2: eigyo_flatから対象月の乗務員を先に抽出
+eigyo_drivers AS (
+    SELECT DISTINCT cstm_cd, eigyosyo_cd, jomuin_cd
+    FROM taxicloud.eigyo_flat
+    WHERE sales_month = '2024/09' --  検索したい年月をここに指定
+)
+-- ステップ3: 小さくなった乗務員リストを元に結合
+SELECT
+    ud.cstm_cd,
+    ud.eigyosyo_cd,
+    ud.jomuin_cd,
+    jm.jomuin_nm
+FROM
+    unko_drivers AS ud
+INNER JOIN
+    eigyo_drivers AS ed
+    ON  ud.cstm_cd = ed.cstm_cd
+    AND ud.eigyosyo_cd = ed.eigyosyo_cd
+    AND ud.jomuin_cd = ed.jomuin_cd
+INNER JOIN
+    taxicloud.jomuin_mst AS jm
+    ON  ud.cstm_cd = jm.cstm_cd
+    AND ud.eigyosyo_cd = jm.eigyosyo_cd
+    AND ud.jomuin_cd = jm.jomuin_cd
+INNER JOIN
+    taxicloud.kubun_mst AS km
+    ON jm.kbn_cd = km.kbn_cd
+LIMIT 10;

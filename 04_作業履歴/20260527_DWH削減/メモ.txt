@@ -1,0 +1,28 @@
+タスク
+・DWH 削減案検討
+
+	目的
+		機能を残しつつ費用削減
+	
+	手段
+		ラムダ処理を改修
+		ラムダ起動頻度を落とす
+
+
+現状処理・料金
+	Redshift Serverless
+		→RedShiftがLambdaからのコピーやUnloadを処理する際にかかる処理料金
+	Redshift Storage
+	→データ保持にかかる料金
+
+	4月
+		Redshift Serverless ＄2402.56
+		Redshift Storage    ＄6.38
+
+	Lamda処理
+		本番環境
+			・buster-${EnvType}-get-json-from-strike
+				処理回数:68502
+			・buster-${EnvType}-sync-master-data-function
+				処理回数:
+

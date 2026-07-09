@@ -1,0 +1,291 @@
+INSERT INTO taxicloud.unko_flat (
+    cstm_cd, eigyosyo_cd, jomuin_cd, nyuko_dtm, syukko_dtm, sales_date, sales_month,
+    soeisyu, unko_gensyu, unko_misyu, tax, zeinuki_soeisyu, jomu_km, sa_eigyo_cnt,
+    sa_eigyosoko_km, sa_zensoko_km, sa_kuuten_km, sa_geisya_km, roudou_tm_h, kyukei_tm,
+    kusyateisi_tm, sa_rui_handle_tm, sa_zensoko_tm, sa_eigyo_soko_tm, sa_eigyo_tm,
+    sa_geicancel_kin, unko_etc_ryokin, etc_kusya_ryokin, etc_zisya_ryokin, etc_geisya_ryokin,
+    total_tatekae_kin, total_kihon_kin, total_zigo_kin, total_geisya_kin,
+    total_okikae_kin_flg, total_teigaku_kin, tatekae_kousoku, tatekae_chusya,
+    tatekae_sonota, total_kin, sa_tarifu_a_kin, sa_tarifu_b_kin, sa_tarifu_c_kin,
+    sa_tarifu_d_kin, sa_tarifu_e_kin, sa_tarifu_f_kin, sa_tarifu_g_kin, sa_tarifu_h_kin,
+    sa_tarifu_i_kin, sa_tarifu_x_kin, sa_tarifu_y_kin, sa_tarifu_j_kin, sa_tarifu_k_kin,
+    sa_tarifu_l_kin, sa_tarifu_a_cnt, sa_tarifu_b_cnt, sa_tarifu_c_cnt, sa_tarifu_d_cnt,
+    sa_tarifu_e_cnt, sa_tarifu_f_cnt, sa_tarifu_g_cnt, sa_tarifu_h_cnt, sa_tarifu_i_cnt,
+    sa_tarifu_x_cnt, sa_tarifu_y_cnt, sa_zigo1_cnt, sa_zigo2_cnt, sa_zigo3_cnt,
+    sa_geicancel_cnt, sa_back_cnt, unko_man_jinin, unko_woman_jinin,data_key ,insert_datetime
+)
+SELECT
+    '02000012' AS cstm_cd,
+    '00000001' AS eigyosyo_cd,
+    'JM000001' AS jomuin_cd,
+    '2027-01-15 18:00:00' AS nyuko_dtm,
+    '2027-01-15 08:00:00' AS syukko_dtm,
+    '2027-01-15' AS sales_date,
+    '2027/01' AS sales_month,
+    50000 AS soeisyu,
+    48000 AS unko_gensyu,
+    2000 AS unko_misyu,
+    5000 AS tax,
+    45000 AS zeinuki_soeisyu,
+    200 AS jomu_km,
+    20 AS sa_eigyo_cnt,
+    150 AS sa_eigyosoko_km,
+    200 AS sa_zensoko_km,
+    50 AS sa_kuuten_km,
+    10 AS sa_geisya_km,
+    10 AS roudou_tm_h,
+    1 AS kyukei_tm,
+    1 AS kusyateisi_tm,
+    1 AS sa_rui_handle_tm,
+    8 AS sa_zensoko_tm,
+    7 AS sa_eigyo_soko_tm,
+    6 AS sa_eigyo_tm,
+    100 AS sa_geicancel_kin,
+    1000 AS unko_etc_ryokin,
+    500 AS etc_kusya_ryokin,
+    200 AS etc_zisya_ryokin,
+    300 AS etc_geisya_ryokin,
+    1500 AS total_tatekae_kin,
+    40000 AS total_kihon_kin,
+    2000 AS total_zigo_kin,
+    1000 AS total_geisya_kin,
+    0 AS total_okikae_kin_flg,
+    500 AS total_teigaku_kin,
+    1000 AS tatekae_kousoku,
+    200 AS tatekae_chusya,
+    300 AS tatekae_sonota,
+    1500 AS total_kin,
+    10000 AS sa_tarifu_a_kin,
+    5000 AS sa_tarifu_b_kin,
+    2000 AS sa_tarifu_c_kin,
+    1000 AS sa_tarifu_d_kin,
+    0 AS sa_tarifu_e_kin,
+    0 AS sa_tarifu_f_kin,
+    0 AS sa_tarifu_g_kin,
+    0 AS sa_tarifu_h_kin,
+    0 AS sa_tarifu_i_kin,
+    0 AS sa_tarifu_x_kin,
+    0 AS sa_tarifu_y_kin,
+    0 AS sa_tarifu_j_kin,
+    0 AS sa_tarifu_k_kin,
+    0 AS sa_tarifu_l_kin,
+    10 AS sa_tarifu_a_cnt,
+    5 AS sa_tarifu_b_cnt,
+    2 AS sa_tarifu_c_cnt,
+    1 AS sa_tarifu_d_cnt,
+    0 AS sa_tarifu_e_cnt,
+    0 AS sa_tarifu_f_cnt,
+    0 AS sa_tarifu_g_cnt,
+    0 AS sa_tarifu_h_cnt,
+    0 AS sa_tarifu_i_cnt,
+    0 AS sa_tarifu_x_cnt,
+    0 AS sa_tarifu_y_cnt,
+    1 AS sa_zigo1_cnt,
+    1 AS sa_zigo2_cnt,
+    1 AS sa_zigo3_cnt,
+    1 AS sa_geicancel_cnt,
+    1 AS sa_back_cnt,
+    15 AS unko_man_jinin,
+    5 AS unko_woman_jinin,
+    'test' AS data_key,
+    '2025/01/01'as insert_datetime
+;
+
+-- ケース2: 乗務員JM000001 / 1月16日 (同一乗務員が別日にもデータを持つケース)
+INSERT INTO taxicloud.unko_flat (
+    cstm_cd, eigyosyo_cd, jomuin_cd, nyuko_dtm, syukko_dtm, sales_date, sales_month,
+    soeisyu, unko_gensyu, unko_misyu, tax, zeinuki_soeisyu, jomu_km, sa_eigyo_cnt,
+    sa_eigyosoko_km, sa_zensoko_km, sa_kuuten_km, sa_geisya_km, roudou_tm_h, kyukei_tm,
+    kusyateisi_tm, sa_rui_handle_tm, sa_zensoko_tm, sa_eigyo_soko_tm, sa_eigyo_tm,
+    sa_geicancel_kin, unko_etc_ryokin, etc_kusya_ryokin, etc_zisya_ryokin, etc_geisya_ryokin,
+    total_tatekae_kin, total_kihon_kin, total_zigo_kin, total_geisya_kin,
+    total_okikae_kin_flg, total_teigaku_kin, tatekae_kousoku, tatekae_chusya,
+    tatekae_sonota, total_kin, sa_tarifu_a_kin, sa_tarifu_b_kin, sa_tarifu_c_kin,
+    sa_tarifu_d_kin, sa_tarifu_e_kin, sa_tarifu_f_kin, sa_tarifu_g_kin, sa_tarifu_h_kin,
+    sa_tarifu_i_kin, sa_tarifu_x_kin, sa_tarifu_y_kin, sa_tarifu_j_kin, sa_tarifu_k_kin,
+    sa_tarifu_l_kin, sa_tarifu_a_cnt, sa_tarifu_b_cnt, sa_tarifu_c_cnt, sa_tarifu_d_cnt,
+    sa_tarifu_e_cnt, sa_tarifu_f_cnt, sa_tarifu_g_cnt, sa_tarifu_h_cnt, sa_tarifu_i_cnt,
+    sa_tarifu_x_cnt, sa_tarifu_y_cnt, sa_zigo1_cnt, sa_zigo2_cnt, sa_zigo3_cnt,
+    sa_geicancel_cnt, sa_back_cnt, unko_man_jinin, unko_woman_jinin,data_key ,insert_datetime
+)
+SELECT
+    '02000012' AS cstm_cd, '00000001' AS eigyosyo_cd, 'JM000001' AS jomuin_cd, '2027-01-16 19:00:00' AS nyuko_dtm,
+    '2027-01-16 09:00:00' AS syukko_dtm, '2027-01-16' AS sales_date, '2027/01' AS sales_month, 80000 AS soeisyu,
+    75000 AS unko_gensyu, 5000 AS unko_misyu, 8000 AS tax, 72000 AS zeinuki_soeisyu, 300 AS jomu_km, 30 AS sa_eigyo_cnt,
+    250 AS sa_eigyosoko_km, 300 AS sa_zensoko_km, 50 AS sa_kuuten_km, 15 AS sa_geisya_km, 10 AS roudou_tm_h, 1 AS kyukei_tm,
+    1 AS kusyateisi_tm, 1 AS sa_rui_handle_tm, 9 AS sa_zensoko_tm, 8 AS sa_eigyo_soko_tm, 7 AS sa_eigyo_tm,
+    200 AS sa_geicancel_kin, 2000 AS unko_etc_ryokin, 1000 AS etc_kusya_ryokin, 500 AS etc_zisya_ryokin, 500 AS etc_geisya_ryokin,
+    2500 AS total_tatekae_kin, 60000 AS total_kihon_kin, 5000 AS total_zigo_kin, 3000 AS total_geisya_kin,
+    1 AS total_okikae_kin_flg, 1000 AS total_teigaku_kin, 1500 AS tatekae_kousoku, 500 AS tatekae_chusya,
+    500 AS tatekae_sonota, 2500 AS total_kin, 20000 AS sa_tarifu_a_kin, 10000 AS sa_tarifu_b_kin, 5000 AS sa_tarifu_c_kin,
+    2000 AS sa_tarifu_d_kin, 0 AS sa_tarifu_e_kin, 0 AS sa_tarifu_f_kin, 0 AS sa_tarifu_g_kin, 0 AS sa_tarifu_h_kin,
+    0 AS sa_tarifu_i_kin, 0 AS sa_tarifu_x_kin, 0 AS sa_tarifu_y_kin, 0 AS sa_tarifu_j_kin, 0 AS sa_tarifu_k_kin,
+    0 AS sa_tarifu_l_kin, 15 AS sa_tarifu_a_cnt, 8 AS sa_tarifu_b_cnt, 4 AS sa_tarifu_c_cnt, 2 AS sa_tarifu_d_cnt,
+    0 AS sa_tarifu_e_cnt, 0 AS sa_tarifu_f_cnt, 0 AS sa_tarifu_g_cnt, 0 AS sa_tarifu_h_cnt, 0 AS sa_tarifu_i_cnt,
+    0 AS sa_tarifu_x_cnt, 0 AS sa_tarifu_y_cnt, 2 AS sa_zigo1_cnt, 2 AS sa_zigo2_cnt, 2 AS sa_zigo3_cnt,
+    2 AS sa_geicancel_cnt, 2 AS sa_back_cnt, 25 AS unko_man_jinin, 5 AS unko_woman_jinin,
+    'test_02' AS data_key, NOW() AS insert_datetime;
+
+-- ケース3: 乗務員JM000002 / 1月16日 (同一日に別乗務員のデータを持つケース)
+INSERT INTO taxicloud.unko_flat (
+    cstm_cd, eigyosyo_cd, jomuin_cd, nyuko_dtm, syukko_dtm, sales_date, sales_month,
+    soeisyu, unko_gensyu, unko_misyu, tax, zeinuki_soeisyu, jomu_km, sa_eigyo_cnt,
+    sa_eigyosoko_km, sa_zensoko_km, sa_kuuten_km, sa_geisya_km, roudou_tm_h, kyukei_tm,
+    kusyateisi_tm, sa_rui_handle_tm, sa_zensoko_tm, sa_eigyo_soko_tm, sa_eigyo_tm,
+    sa_geicancel_kin, unko_etc_ryokin, etc_kusya_ryokin, etc_zisya_ryokin, etc_geisya_ryokin,
+    total_tatekae_kin, total_kihon_kin, total_zigo_kin, total_geisya_kin,
+    total_okikae_kin_flg, total_teigaku_kin, tatekae_kousoku, tatekae_chusya,
+    tatekae_sonota, total_kin, sa_tarifu_a_kin, sa_tarifu_b_kin, sa_tarifu_c_kin,
+    sa_tarifu_d_kin, sa_tarifu_e_kin, sa_tarifu_f_kin, sa_tarifu_g_kin, sa_tarifu_h_kin,
+    sa_tarifu_i_kin, sa_tarifu_x_kin, sa_tarifu_y_kin, sa_tarifu_j_kin, sa_tarifu_k_kin,
+    sa_tarifu_l_kin, sa_tarifu_a_cnt, sa_tarifu_b_cnt, sa_tarifu_c_cnt, sa_tarifu_d_cnt,
+    sa_tarifu_e_cnt, sa_tarifu_f_cnt, sa_tarifu_g_cnt, sa_tarifu_h_cnt, sa_tarifu_i_cnt,
+    sa_tarifu_x_cnt, sa_tarifu_y_cnt, sa_zigo1_cnt, sa_zigo2_cnt, sa_zigo3_cnt,
+    sa_geicancel_cnt, sa_back_cnt, unko_man_jinin, unko_woman_jinin,data_key ,insert_datetime
+)
+SELECT
+    '02000012' AS cstm_cd, '00000001' AS eigyosyo_cd, 'JM000002' AS jomuin_cd, '2027-01-16 18:30:00' AS nyuko_dtm,
+    '2027-01-16 08:30:00' AS syukko_dtm, '2027-01-16' AS sales_date, '2027/01' AS sales_month, 45000 AS soeisyu,
+    45000 AS unko_gensyu, 0 AS unko_misyu, 4500 AS tax, 40500 AS zeinuki_soeisyu, 180 AS jomu_km, 18 AS sa_eigyo_cnt,
+    140 AS sa_eigyosoko_km, 180 AS sa_zensoko_km, 40 AS sa_kuuten_km, 8 AS sa_geisya_km, 10 AS roudou_tm_h, 1 AS kyukei_tm,
+    1 AS kusyateisi_tm, 1 AS sa_rui_handle_tm, 8 AS sa_zensoko_tm, 7 AS sa_eigyo_soko_tm, 6 AS sa_eigyo_tm,
+    0 AS sa_geicancel_kin, 500 AS unko_etc_ryokin, 200 AS etc_kusya_ryokin, 100 AS etc_zisya_ryokin, 200 AS etc_geisya_ryokin,
+    800 AS total_tatekae_kin, 30000 AS total_kihon_kin, 0 AS total_zigo_kin, 0 AS total_geisya_kin,
+    0 AS total_okikae_kin_flg, 0 AS total_teigaku_kin, 500 AS tatekae_kousoku, 200 AS tatekae_chusya,
+    100 AS tatekae_sonota, 800 AS total_kin, 8000 AS sa_tarifu_a_kin, 4000 AS sa_tarifu_b_kin, 1000 AS sa_tarifu_c_kin,
+    500 AS sa_tarifu_d_kin, 0 AS sa_tarifu_e_kin, 0 AS sa_tarifu_f_kin, 0 AS sa_tarifu_g_kin, 0 AS sa_tarifu_h_kin,
+    0 AS sa_tarifu_i_kin, 0 AS sa_tarifu_x_kin, 0 AS sa_tarifu_y_kin, 0 AS sa_tarifu_j_kin, 0 AS sa_tarifu_k_kin,
+    0 AS sa_tarifu_l_kin, 8 AS sa_tarifu_a_cnt, 4 AS sa_tarifu_b_cnt, 3 AS sa_tarifu_c_cnt, 1 AS sa_tarifu_d_cnt,
+    0 AS sa_tarifu_e_cnt, 0 AS sa_tarifu_f_cnt, 0 AS sa_tarifu_g_cnt, 0 AS sa_tarifu_h_cnt, 0 AS sa_tarifu_i_cnt,
+    0 AS sa_tarifu_x_cnt, 0 AS sa_tarifu_y_cnt, 0 AS sa_zigo1_cnt, 0 AS sa_zigo2_cnt, 0 AS sa_zigo3_cnt,
+    0 AS sa_geicancel_cnt, 0 AS sa_back_cnt, 12 AS unko_man_jinin, 6 AS unko_woman_jinin,
+    'test_03' AS data_key, NOW() AS insert_datetime;
+
+-- ケース4: 乗務員JM000002 / 1月17日
+INSERT INTO taxicloud.unko_flat (
+    cstm_cd, eigyosyo_cd, jomuin_cd, nyuko_dtm, syukko_dtm, sales_date, sales_month,
+    soeisyu, unko_gensyu, unko_misyu, tax, zeinuki_soeisyu, jomu_km, sa_eigyo_cnt,
+    sa_eigyosoko_km, sa_zensoko_km, sa_kuuten_km, sa_geisya_km, roudou_tm_h, kyukei_tm,
+    kusyateisi_tm, sa_rui_handle_tm, sa_zensoko_tm, sa_eigyo_soko_tm, sa_eigyo_tm,
+    sa_geicancel_kin, unko_etc_ryokin, etc_kusya_ryokin, etc_zisya_ryokin, etc_geisya_ryokin,
+    total_tatekae_kin, total_kihon_kin, total_zigo_kin, total_geisya_kin,
+    total_okikae_kin_flg, total_teigaku_kin, tatekae_kousoku, tatekae_chusya,
+    tatekae_sonota, total_kin, sa_tarifu_a_kin, sa_tarifu_b_kin, sa_tarifu_c_kin,
+    sa_tarifu_d_kin, sa_tarifu_e_kin, sa_tarifu_f_kin, sa_tarifu_g_kin, sa_tarifu_h_kin,
+    sa_tarifu_i_kin, sa_tarifu_x_kin, sa_tarifu_y_kin, sa_tarifu_j_kin, sa_tarifu_k_kin,
+    sa_tarifu_l_kin, sa_tarifu_a_cnt, sa_tarifu_b_cnt, sa_tarifu_c_cnt, sa_tarifu_d_cnt,
+    sa_tarifu_e_cnt, sa_tarifu_f_cnt, sa_tarifu_g_cnt, sa_tarifu_h_cnt, sa_tarifu_i_cnt,
+    sa_tarifu_x_cnt, sa_tarifu_y_cnt, sa_zigo1_cnt, sa_zigo2_cnt, sa_zigo3_cnt,
+    sa_geicancel_cnt, sa_back_cnt, unko_man_jinin, unko_woman_jinin,data_key ,insert_datetime
+)
+SELECT
+    '02000012' AS cstm_cd, '00000001' AS eigyosyo_cd, 'JM000002' AS jomuin_cd, '2027-01-17 18:00:00' AS nyuko_dtm,
+    '2027-01-17 08:00:00' AS syukko_dtm, '2027-01-17' AS sales_date, '2027/01' AS sales_month, 60000 AS soeisyu,
+    60000 AS unko_gensyu, 0 AS unko_misyu, 6000 AS tax, 54000 AS zeinuki_soeisyu, 220 AS jomu_km, 25 AS sa_eigyo_cnt,
+    180 AS sa_eigyosoko_km, 220 AS sa_zensoko_km, 40 AS sa_kuuten_km, 12 AS sa_geisya_km, 10 AS roudou_tm_h, 1 AS kyukei_tm,
+    1 AS kusyateisi_tm, 1 AS sa_rui_handle_tm, 8 AS sa_zensoko_tm, 7 AS sa_eigyo_soko_tm, 6 AS sa_eigyo_tm,
+    50 AS sa_geicancel_kin, 1500 AS unko_etc_ryokin, 800 AS etc_kusya_ryokin, 300 AS etc_zisya_ryokin, 400 AS etc_geisya_ryokin,
+    2300 AS total_tatekae_kin, 50000 AS total_kihon_kin, 0 AS total_zigo_kin, 0 AS total_geisya_kin,
+    0 AS total_okikae_kin_flg, 0 AS total_teigaku_kin, 1500 AS tatekae_kousoku, 800 AS tatekae_chusya,
+    400 AS tatekae_sonota, 2300 AS total_kin, 15000 AS sa_tarifu_a_kin, 8000 AS sa_tarifu_b_kin, 4000 AS sa_tarifu_c_kin,
+    1000 AS sa_tarifu_d_kin, 0 AS sa_tarifu_e_kin, 0 AS sa_tarifu_f_kin, 0 AS sa_tarifu_g_kin, 0 AS sa_tarifu_h_kin,
+    0 AS sa_tarifu_i_kin, 0 AS sa_tarifu_x_kin, 0 AS sa_tarifu_y_kin, 0 AS sa_tarifu_j_kin, 0 AS sa_tarifu_k_kin,
+    0 AS sa_tarifu_l_kin, 12 AS sa_tarifu_a_cnt, 6 AS sa_tarifu_b_cnt, 4 AS sa_tarifu_c_cnt, 2 AS sa_tarifu_d_cnt,
+    0 AS sa_tarifu_e_cnt, 0 AS sa_tarifu_f_cnt, 0 AS sa_tarifu_g_cnt, 0 AS sa_tarifu_h_cnt, 0 AS sa_tarifu_i_cnt,
+    0 AS sa_tarifu_x_cnt, 0 AS sa_tarifu_y_cnt, 1 AS sa_zigo1_cnt, 1 AS sa_zigo2_cnt, 1 AS sa_zigo3_cnt,
+    1 AS sa_geicancel_cnt, 1 AS sa_back_cnt, 20 AS unko_man_jinin, 5 AS unko_woman_jinin,
+    'test_04' AS data_key, NOW() AS insert_datetime;
+
+-- ケース5: 乗務員JM000003 / 1月18日 (ユニークな乗務員と日付)
+INSERT INTO taxicloud.unko_flat (
+    cstm_cd, eigyosyo_cd, jomuin_cd, nyuko_dtm, syukko_dtm, sales_date, sales_month,
+    soeisyu, unko_gensyu, unko_misyu, tax, zeinuki_soeisyu, jomu_km, sa_eigyo_cnt,
+    sa_eigyosoko_km, sa_zensoko_km, sa_kuuten_km, sa_geisya_km, roudou_tm_h, kyukei_tm,
+    kusyateisi_tm, sa_rui_handle_tm, sa_zensoko_tm, sa_eigyo_soko_tm, sa_eigyo_tm,
+    sa_geicancel_kin, unko_etc_ryokin, etc_kusya_ryokin, etc_zisya_ryokin, etc_geisya_ryokin,
+    total_tatekae_kin, total_kihon_kin, total_zigo_kin, total_geisya_kin,
+    total_okikae_kin_flg, total_teigaku_kin, tatekae_kousoku, tatekae_chusya,
+    tatekae_sonota, total_kin, sa_tarifu_a_kin, sa_tarifu_b_kin, sa_tarifu_c_kin,
+    sa_tarifu_d_kin, sa_tarifu_e_kin, sa_tarifu_f_kin, sa_tarifu_g_kin, sa_tarifu_h_kin,
+    sa_tarifu_i_kin, sa_tarifu_x_kin, sa_tarifu_y_kin, sa_tarifu_j_kin, sa_tarifu_k_kin,
+    sa_tarifu_l_kin, sa_tarifu_a_cnt, sa_tarifu_b_cnt, sa_tarifu_c_cnt, sa_tarifu_d_cnt,
+    sa_tarifu_e_cnt, sa_tarifu_f_cnt, sa_tarifu_g_cnt, sa_tarifu_h_cnt, sa_tarifu_i_cnt,
+    sa_tarifu_x_cnt, sa_tarifu_y_cnt, sa_zigo1_cnt, sa_zigo2_cnt, sa_zigo3_cnt,
+    sa_geicancel_cnt, sa_back_cnt, unko_man_jinin, unko_woman_jinin,data_key ,insert_datetime
+)
+SELECT
+    '02000012' AS cstm_cd, '00000001' AS eigyosyo_cd, 'JM000003' AS jomuin_cd, '2027-01-18 17:00:00' AS nyuko_dtm,
+    '2027-01-18 09:00:00' AS syukko_dtm, '2027-01-18' AS sales_date, '2027/01' AS sales_month, 10000 AS soeisyu,
+    10000 AS unko_gensyu, 0 AS unko_misyu, 1000 AS tax, 9000 AS zeinuki_soeisyu, 50 AS jomu_km, 5 AS sa_eigyo_cnt,
+    40 AS sa_eigyosoko_km, 50 AS sa_zensoko_km, 10 AS sa_kuuten_km, 2 AS sa_geisya_km, 8 AS roudou_tm_h, 1 AS kyukei_tm,
+    1 AS kusyateisi_tm, 1 AS sa_rui_handle_tm, 5 AS sa_zensoko_tm, 4 AS sa_eigyo_soko_tm, 3 AS sa_eigyo_tm,
+    0 AS sa_geicancel_kin, 0 AS unko_etc_ryokin, 0 AS etc_kusya_ryokin, 0 AS etc_zisya_ryokin, 0 AS etc_geisya_ryokin,
+    0 AS total_tatekae_kin, 10000 AS total_kihon_kin, 0 AS total_zigo_kin, 0 AS total_geisya_kin,
+    0 AS total_okikae_kin_flg, 0 AS total_teigaku_kin, 0 AS tatekae_kousoku, 0 AS tatekae_chusya,
+    0 AS tatekae_sonota, 0 AS total_kin, 5000 AS sa_tarifu_a_kin, 0 AS sa_tarifu_b_kin, 0 AS sa_tarifu_c_kin,
+    0 AS sa_tarifu_d_kin, 0 AS sa_tarifu_e_kin, 0 AS sa_tarifu_f_kin, 0 AS sa_tarifu_g_kin, 0 AS sa_tarifu_h_kin,
+    0 AS sa_tarifu_i_kin, 0 AS sa_tarifu_x_kin, 0 AS sa_tarifu_y_kin, 0 AS sa_tarifu_j_kin, 0 AS sa_tarifu_k_kin,
+    0 AS sa_tarifu_l_kin, 5 AS sa_tarifu_a_cnt, 0 AS sa_tarifu_b_cnt, 0 AS sa_tarifu_c_cnt, 0 AS sa_tarifu_d_cnt,
+    0 AS sa_tarifu_e_cnt, 0 AS sa_tarifu_f_cnt, 0 AS sa_tarifu_g_cnt, 0 AS sa_tarifu_h_cnt, 0 AS sa_tarifu_i_cnt,
+    0 AS sa_tarifu_x_cnt, 0 AS sa_tarifu_y_cnt, 0 AS sa_zigo1_cnt, 0 AS sa_zigo2_cnt, 0 AS sa_zigo3_cnt,
+    0 AS sa_geicancel_cnt, 0 AS sa_back_cnt, 4 AS unko_man_jinin, 1 AS unko_woman_jinin,
+    'test_05' AS data_key, NOW() AS insert_datetime;
+
+
+
+
+-- ケース1: 乗務員JM000001 / 1月15日 → 車両S001
+UPDATE taxicloud.unko_flat
+SET syaryo_cd = 'S001'
+WHERE jomuin_cd = 'JM000001' AND sales_date = '2027-01-15';
+
+-- ケース2: 乗務員JM000001 / 1月16日 → 車両S002
+UPDATE taxicloud.unko_flat
+SET syaryo_cd = 'S002'
+WHERE jomuin_cd = 'JM000001' AND sales_date = '2027-01-16';
+
+-- ケース3: 乗務員JM000002 / 1月16日 → 車両S003
+UPDATE taxicloud.unko_flat
+SET syaryo_cd = 'S003'
+WHERE jomuin_cd = 'JM000002' AND sales_date = '2027-01-16';
+
+-- ケース4: 乗務員JM000002 / 1月17日 → 車両S004
+UPDATE taxicloud.unko_flat
+SET syaryo_cd = 'S004'
+WHERE jomuin_cd = 'JM000002' AND sales_date = '2027-01-17';
+
+-- ケース5: 乗務員JM000003 / 1月18日 → 車両S005
+UPDATE taxicloud.unko_flat
+SET syaryo_cd = 'S005'
+WHERE jomuin_cd = 'JM000003' AND sales_date = '2027-01-18';    
+
+
+-- 前月データ (2026/12)
+
+INSERT INTO taxicloud.unko_flat (
+    cstm_cd,
+    eigyosyo_cd,
+    jomuin_cd,
+    sales_date,
+    sales_month,
+    data_key,
+    soeisyu,
+    jomuin_target_month,
+    insert_datetime,
+    update_count
+) VALUES
+-- 乗務員JM000001の前月データ
+(
+    '19951115', '00000001', 'JM000001', '2026-12-15', '2026/12',
+    'prev_month_test_01', 48000, 50000, NOW(), 0
+),
+-- 乗務員JM000002の前月データ
+(
+    '19951115', '00000001', 'JM000002', '2026-12-16', '2026/12',
+    'prev_month_test_02', 60000, 55000, NOW(), 0
+),
+-- 乗務員JM000003の前月データ (目標未達ケース)
+(
+    '19951115', '00000001', 'JM000003', '2026-12-18', '2026/12',
+    'prev_month_test_03', 30000, 50000, NOW(), 0
+);

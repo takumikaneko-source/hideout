@@ -1,0 +1,18 @@
+
+INSERT INTO taxicloud.eigyosyo_mst (
+    eigyosyo_cd,
+    eigyosyo_cd4,
+    cstm_cd,
+    eigyosyo_nm,
+    tujo_setei,
+    upd_datetime,
+    delete_flg,
+    insert_datetime,
+    insert_user_id,
+    insert_business_id,
+    update_count
+) VALUES
+('00000001', '0001', '19951115', 'かねこ第一営業所', '1', NOW(), 0, NOW(), 'system', 'test_data', 0),
+('00000002', '0002', '19951115', 'かねこ第二営業所', '1', NOW(), 0, NOW(), 'system', 'test_data', 0);
+
+

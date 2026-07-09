@@ -1,0 +1,2 @@
+INSERT INTO taxicloud.kokyaku_mst (cstm_cd, kokyaku_nm, insert_datetime, update_datetime,upd_datetime,disposalday_time,insert_user_id,insert_business_id) VALUES
+('19951115', 'テスト顧客', NOW(), NOW(),NOW(),'19:00','test','kaneko');

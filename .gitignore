@@ -1,0 +1,41 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Google Drive / Cloud
+*.gsheet
+.sync
+
+# Credentials & Secrets (do not track)
+.aws/
+PW/
+.env
+.env.local
+*AWS*
+*credentials*
+*secret*
+*token*
+*password*
+*.key
+*.pem
+*.bat
+
+# Temporary & Cache
+tmp/
+99_tmp/
+.cache/
+*.tmp
+*.bak
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System
+.git/
+node_modules/
+__pycache__/
+*.pyc

@@ -1,0 +1,63 @@
+INSERT INTO taxicloud.user_mst (
+    user_id,
+    user_nm,
+    user_pswd,
+    authority,
+    cstm_cd,
+    eigyosyo_cd,
+    kcps_delete_flg,
+    upd_datetime,
+    delete_flg,
+    insert_datetime,
+    insert_user_id,
+    insert_business_id,
+    update_count
+) VALUES
+-- 1. 営業所1の管理者ユーザー
+(
+    'devtest01', 
+    'テスト管理者（営業所1）', 
+    '$2b$10$bqzbo1msGM3XP0edsGbatO7k.BKIhZrpsB5zwFdE6oDFr8jQWvuMS', -- パスワードは仮の値
+    6, -- 権限 (仮に1)
+    '19951115', -- 既存のテストデータとcstm_cdを合わせる
+    '00000001', -- 既存のテストデータとeigyosyo_cdを合わせる
+    0, 
+    NOW(), 
+    0, 
+    NOW(), 
+    'system', 
+    'test_data', 
+    0
+),
+-- 2. 営業所2の一般ユーザー
+(
+    'devtest02', 
+    'テスト一般（営業所2）', 
+    '$2b$10$bqzbo1msGM3XP0edsGbatO7k.BKIhZrpsB5zwFdE6oDFr8jQWvuMS', 
+    6, -- 権限 (仮に2)
+    '19951115', -- 既存のテストデータとcstm_cdを合わせる
+    '00000002', -- 既存のテストデータとeigyosyo_cdを合わせる
+    0, 
+    NOW(), 
+    0, 
+    NOW(), 
+    'system', 
+    'test_data', 
+    0
+),
+-- 3. 営業所1の別ユーザー
+(
+    'devtest01', 
+    'テスト一般（営業所1）', 
+    '$2b$10$bqzbo1msGM3XP0edsGbatO7k.BKIhZrpsB5zwFdE6oDFr8jQWvuMS', 
+    6, -- 権限 (仮に2)
+    '19951115', -- 既存のテストデータとcstm_cdを合わせる
+    '00000001', -- 既存のテストデータとeigyosyo_cdを合わせる
+    0, 
+    NOW(), 
+    0, 
+    NOW(), 
+    'system', 
+    'test_data', 
+    0
+);

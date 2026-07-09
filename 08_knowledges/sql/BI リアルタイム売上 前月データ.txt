@@ -1,0 +1,9 @@
+-- New script in 【DEV4】yzk-duel-dev4.
+-- Date: 2026 Feb 2
+-- Time: 02:36:17
+
+
+
+INSERT INTO taxicloud.eigyo_flat_per_hour 
+(cstm_cd, eigyosyo_cd, sales_date , sales_hour, sort_number, goukei_kin, reserve1, reserve2, reserve3, reserve4, reserve5, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_datetime, update_user_id, update_business_id, update_count)
+VALUES('02000026', '00000001', '2026-01-16', '15', 15, 40000, NULL, NULL, NULL, NULL, NULL, 0, '2026-01-16 20:04:30', '0000', '0000', '2025-08-04 14:40:22', '0000', '0000', 33);

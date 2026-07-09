@@ -1,0 +1,17 @@
+INSERT INTO taxicloud.kubun_mst (
+    kbn_cd,
+    cstm_cd,
+    eigyosyo_cd,
+    kbn_nm,
+    delete_flg,
+    insert_datetime,
+    insert_user_id,
+    insert_business_id,
+    update_count
+) VALUES
+('01', '19951115', '00000001', '正社員', 0, NOW(), 'system', 'test_data', 0),
+('02', '19951115', '00000001', '契約', 0, NOW(), 'system', 'test_data', 0);
+
+
+INSERT INTO taxicloud.kubun_mst (kbn_cd, cstm_cd, eigyosyo_cd, kbn_nm, delete_flg, insert_datetime, insert_user_id, insert_business_id, update_count) 
+VALUES ('03', '19951115', '00000001', '新人', 0, NOW(), 'system', 'test_data', 0);

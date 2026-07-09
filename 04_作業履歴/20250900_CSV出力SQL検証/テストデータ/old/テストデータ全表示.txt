@@ -1,0 +1,45 @@
+-- =========== 1. 検索パラメータの宣言 ===========
+SET @cstm_cd = '19951115';
+SET @eigyosyo_cd_1 = '00000001';
+SET @eigyosyo_cd_2 = '00000002';
+SET @start_date = '2026-11-30';
+SET @end_date = '2027-01-31';
+
+-- =========== 2. 各テーブルのデータ抽出SQL ===========
+
+-- 顧客マスタ (kokyaku_mst) の確認
+SELECT * FROM taxicloud.kokyaku_mst
+WHERE cstm_cd = @cstm_cd;
+
+-- 営業所マスタ (eigyosyo_mst) の確認
+SELECT * FROM taxicloud.eigyosyo_mst
+WHERE cstm_cd = @cstm_cd
+  AND eigyosyo_cd IN (@eigyosyo_cd_1, @eigyosyo_cd_2);
+
+-- 乗務員マスタ (jomuin_mst) の確認
+SELECT * FROM taxicloud.jomuin_mst
+WHERE cstm_cd = @cstm_cd
+  AND jomuin_cd IN ('JM000001', 'JM000002', 'JM000003');
+
+-- 車両マスタ (syaryo_mst) の確認
+SELECT * FROM taxicloud.syaryo_mst
+WHERE cstm_cd = @cstm_cd
+  AND syaryo_cd IN ('S001', 'S002', 'S003', 'S004', 'S005');
+
+-- 運行フラット (unko_flat) の確認
+SELECT * FROM taxicloud.unko_flat
+WHERE cstm_cd = @cstm_cd
+  AND sales_date BETWEEN @start_date AND @end_date;
+
+-- ▼▼▼ 追加分 ▼▼▼
+
+-- 区分マスタ (kubun_mst) の確認
+SELECT * FROM taxicloud.kubun_mst
+WHERE cstm_cd = @cstm_cd
+  AND eigyosyo_cd = @eigyosyo_cd_1
+  AND kbn_cd IN ('01', '02');
+
+-- 営業フラット (eigyo_flat) の確認
+SELECT * FROM taxicloud.eigyo_flat
+WHERE cstm_cd = @cstm_cd
+  AND sales_date BETWEEN @start_date AND @end_date;

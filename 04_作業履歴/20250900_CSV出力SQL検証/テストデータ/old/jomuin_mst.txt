@@ -1,0 +1,30 @@
+INSERT INTO taxicloud.jomuin_mst (
+    jomuin_cd,
+    cstm_cd,
+    eigyosyo_cd,
+    client_cd,
+    jomuin_nm,
+    jomuin_kana,
+    kinmu_cd,
+    kbn_cd,
+    jomu_tm,
+    jomu_km,
+    delete_flg,
+    insert_datetime,
+    insert_user_id,
+    insert_business_id,
+    update_count
+) VALUES
+('JM000001', '02000012', '00000001', 'CL001', 'テスト乗務員 太郎', 'テストジョウムイン タロウ', 'A1', '01', 8, 200, 0, NOW(), 'system', 'test_data', 0),
+('JM000002', '02000012', '00000001', 'CL001', 'テスト乗務員 次郎', 'テストジョウムイン ジロウ', 'B2', '01', 8, 220, 0, NOW(), 'system', 'test_data', 0),
+('JM000003', '02000012', '00000001', 'CL001', 'テスト乗務員 三郎', 'テストジョウムイン サブロウ', 'C3', '02', 8, 180, 0, NOW(), 'system', 'test_data', 0);
+
+
+
+UPDATE taxicloud.jomuin_mst
+SET 
+    cstm_cd = '19951115'
+WHERE 
+    cstm_cd = '02000012'
+AND 
+    jomuin_cd IN ('JM000001', 'JM000002', 'JM000003');
