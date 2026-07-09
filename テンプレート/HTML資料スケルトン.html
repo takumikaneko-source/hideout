@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{資料タイトル}}</title>
+<style>
+  :root {
+    --main: #2c5f8a;
+    --bg: #f7f9fb;
+    --text: #333;
+    --border: #d8e0e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Yu Gothic UI", "Meiryo", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.8;
+  }
+  .layout {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 24px;
+    padding: 24px;
+  }
+  main { flex: 1; min-width: 0; }
+  header.doc-header {
+    background: var(--main);
+    color: #fff;
+    padding: 28px 32px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+  }
+  header.doc-header h1 { font-size: 1.5rem; }
+  header.doc-header .meta { font-size: 0.85rem; opacity: 0.85; margin-top: 6px; }
+  section {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 32px;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 1.25rem;
+    color: var(--main);
+    border-left: 5px solid var(--main);
+    padding-left: 12px;
+    margin-bottom: 16px;
+  }
+  h3 {
+    font-size: 1.05rem;
+    color: var(--main);
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 12px; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 0.92rem;
+  }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: #eef3f8; }
+  code {
+    background: #eef1f4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 0.9em;
+  }
+  pre {
+    background: #2d3339;
+    color: #e8ecef;
+    padding: 14px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 12px 0;
+    font-size: 0.88rem;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  ul, ol { padding-left: 24px; margin-bottom: 12px; }
+
+  /* 右側追従目次 */
+  nav.toc {
+    width: 230px;
+    flex-shrink: 0;
+  }
+  nav.toc .toc-inner {
+    position: sticky;
+    top: 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 0.85rem;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  nav.toc .toc-title { font-weight: bold; color: var(--main); margin-bottom: 8px; }
+  nav.toc a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  nav.toc a.lv3 { padding-left: 20px; font-size: 0.8rem; }
+  nav.toc a:hover { background: #eef3f8; }
+  nav.toc a.active { background: var(--main); color: #fff; }
+
+  /* 狭い画面では目次を上部に */
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    nav.toc { width: 100%; order: -1; }
+    nav.toc .toc-inner { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <main>
+    <header class="doc-header">
+      <h1>{{資料タイトル}}</h1>
+      <div class="meta">{{YYYY-MM-DD}} ／ {{作成目的や対象読者}}</div>
+    </header>
+
+    <section id="sec1">
+      <h2>1. {{章タイトル}}</h2>
+      <p>{{本文}}</p>
+
+      <h3 id="sec1-1">1-1. {{小見出し}}</h3>
+      <p>{{本文}}</p>
+
+      <h3 id="sec1-2">1-2. {{小見出し}}</h3>
+      <p>{{本文}}</p>
+    </section>
+
+    <section id="sec2">
+      <h2>2. {{章タイトル}}</h2>
+      <p>{{本文}}</p>
+    </section>
+
+    <!-- 章を増やす場合は section を複製し、id を sec3, sec4… と振る -->
+  </main>
+
+  <nav class="toc">
+    <div class="toc-inner">
+      <div class="toc-title">目次</div>
+      <!-- 目次は h2/h3 から自動生成される -->
+    </div>
+  </nav>
+</div>
+
+<script>
+// 見出し(h2/h3)から目次を自動生成し、スクロールに応じて現在地をハイライトする
+(function () {
+  var tocInner = document.querySelector('.toc-inner');
+  var headings = document.querySelectorAll('main h2, main h3');
+  var links = [];
+
+  headings.forEach(function (h, i) {
+    var target = h.closest('section');
+    var id = h.tagName === 'H2' ? (target ? target.id : '') : h.id;
+    if (!id) { id = 'h-' + i; h.id = id; }
+    var a = document.createElement('a');
+    a.href = '#' + id;
+    a.textContent = h.textContent;
+    if (h.tagName === 'H3') a.className = 'lv3';
+    tocInner.appendChild(a);
+    links.push({ link: a, heading: h });
+  });
+
+  function highlight() {
+    var current = null;
+    links.forEach(function (item) {
+      var rect = item.heading.getBoundingClientRect();
+      if (rect.top <= 100) current = item;
+    });
+    links.forEach(function (item) {
+      item.link.classList.toggle('active', item === current);
+    });
+  }
+
+  window.addEventListener('scroll', highlight, { passive: true });
+  highlight();
+})();
+</script>
+</body>
+</html>
