@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slack通知アラート ログ収集ツール 設計（たたき台 v2）</title>
+<style>
+  :root{--panel:#ffffff;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--ok:#16a34a;--ng:#dc2626;--warn:#d97706;--soft:#f8fafc}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Segoe UI","Yu Gothic UI","Meiryo",sans-serif;color:var(--ink);background:#eef2f7;line-height:1.7}
+  header.hero{background:linear-gradient(135deg,#1e3a8a,#0ea5e9);color:#fff;padding:48px 32px}
+  header.hero .wrap{max-width:1320px;margin:0 auto}
+  header.hero h1{margin:0 0 8px;font-size:30px;letter-spacing:.02em}
+  header.hero p{margin:4px 0;opacity:.95}
+  nav.toptoc{position:sticky;top:0;z-index:10;background:#fff;color:#475569;padding:10px 32px;font-size:13px;border-bottom:1px solid var(--line);box-shadow:0 2px 8px rgba(15,23,42,.06)}
+  nav.toptoc .wrap{max-width:1320px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  nav.toptoc a{color:#475569;text-decoration:none}
+  nav.toptoc a.active,nav.toptoc a:hover{color:#1d4ed8;font-weight:600}
+  .layout{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;gap:28px;align-items:flex-start}
+  main{flex:1 1 auto;min-width:0;max-width:1010px;padding:8px 0 80px}
+  aside.sidenav{flex:0 0 240px;position:sticky;top:18px;align-self:flex-start;max-height:calc(100vh - 36px);overflow:auto;background:#fff;color:#475569;border:1px solid var(--line);border-radius:12px;padding:14px 12px;margin-top:22px;font-size:13px;box-shadow:0 1px 4px rgba(15,23,42,.06)}
+  aside.sidenav .ttl{font-weight:700;color:#94a3b8;font-size:12px;letter-spacing:.08em;padding:2px 8px 8px}
+  aside.sidenav a{display:block;color:#475569;text-decoration:none;border-radius:7px;padding:5px 8px;margin:1px 0;line-height:1.45;border-left:3px solid transparent}
+  aside.sidenav a.lvl1{font-weight:600;color:#334155}
+  aside.sidenav a.lvl2{font-size:12px;color:#64748b;padding-left:20px}
+  aside.sidenav a:hover{background:#f1f5f9;color:#1e293b}
+  aside.sidenav a.active{background:#eff6ff;color:#1d4ed8;border-left-color:#60a5fa}
+  aside.sidenav a.lvl2.active{color:#2563eb}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 28px;margin:22px 0;box-shadow:0 1px 3px rgba(15,23,42,.06);scroll-margin-top:72px}
+  section h2{margin:0 0 6px;font-size:22px;color:#0f172a;border-left:6px solid var(--accent);padding-left:12px}
+  section.done h2{border-left-color:var(--ok)}
+  section .lead{color:var(--muted);margin:0 0 18px;padding-left:18px}
+  h3{font-size:16px;margin:22px 0 8px;color:#1e3a8a;scroll-margin-top:72px}
+  h3 .no{display:inline-block;background:#1e3a8a;color:#fff;border-radius:6px;font-size:12px;padding:1px 8px;margin-right:8px;vertical-align:middle}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--soft);color:#334155;font-weight:600}
+  tr:nth-child(even) td{background:#fcfdff}
+  .note table td{background:#fff}
+  .note table th{background:#f1f5f9}
+  .pill{display:inline-block;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+  .pill.ok{background:#dcfce7;color:var(--ok)}
+  .pill.ng{background:#fee2e2;color:var(--ng)}
+  .pill.mid{background:#fef9c3;color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0}
+  .layer{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .layer .hd{padding:10px 12px;font-weight:700;color:#fff;font-size:14px}
+  .layer:nth-child(1) .hd{background:#2563eb}
+  .layer:nth-child(2) .hd{background:#0ea5e9}
+  .layer:nth-child(3) .hd{background:#0891b2}
+  .layer:nth-child(4) .hd{background:#0d9488}
+  .layer .bd{padding:10px 12px;font-size:13px}
+  .layer .bd .sel{color:#0f172a;font-weight:700}
+  .flow{display:flex;flex-direction:column;gap:0;margin:18px 0}
+  .step{display:flex;gap:14px;align-items:flex-start}
+  .step .num{flex:0 0 34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .step .h{flex:0 0 34px;height:34px;border-radius:50%;background:#0d9488;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+  .step .body{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:6px}
+  .step .body b{color:#1e3a8a}
+  .arrowv{margin:2px 0 2px 16px;color:var(--accent);font-size:18px}
+  .chain{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:18px 20px;font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.9;overflow-x:auto}
+  .chain .c{color:#7dd3fc}.chain .n{color:#fca5a5}.chain .g{color:#86efac}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid var(--warn);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .good{background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid var(--ok);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .danger{background:#fef2f2;border:1px solid #fecaca;border-left:5px solid var(--ng);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  code{background:#eef2ff;color:#3730a3;border-radius:5px;padding:1px 6px;font-family:"Consolas",monospace;font-size:13px}
+  ul.tight{margin:8px 0;padding-left:22px}
+  ul.tight li{margin:4px 0}
+  ol.steps{margin:8px 0;padding-left:22px}
+  ol.steps li{margin:6px 0}
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .tag-h{display:inline-block;background:#0d9488;color:#fff;border-radius:5px;font-size:11px;padding:1px 7px;margin-right:6px}
+  .tag-p{display:inline-block;background:#2563eb;color:#fff;border-radius:5px;font-size:11px;padding:1px 7px;margin-right:6px}
+  .ftree{margin:12px 0}
+  .ftree .root{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#0f172a;background:#eef2ff;border:1px solid var(--line);border-radius:10px;padding:9px 14px}
+  .ftree .kids{margin:8px 0 0 20px;padding-left:16px;border-left:2px dashed #cbd5e1;display:flex;flex-direction:column;gap:6px}
+  .ftree .item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+  .ftree .item .ic{font-size:16px;flex:0 0 auto}
+  .ftree .item .nm{font-family:"Consolas",monospace;font-weight:600;color:#1e293b;flex:0 0 150px}
+  .ftree .item .ds{color:var(--muted);font-size:13px}
+  .ftree .item.hi{border-color:#fdba74;background:#fff7ed}
+  @media(max-width:520px){.ftree .item{flex-wrap:wrap}.ftree .item .nm{flex-basis:auto}}
+  aside.sidenav{display:block}
+  nav.toptoc{display:none}
+  @media(max-width:1180px){aside.sidenav{display:none}nav.toptoc{display:block}.layout{display:block;padding:0 32px}main{max-width:1080px;margin:0 auto}.cols2{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}}
+  @media print{nav.toptoc,aside.sidenav{display:none}body{background:#fff}.layout{display:block}section{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Slack通知アラート ログ収集ツール 設計（たたき台 v2）</h1>
+    <p>人手によるAWS運用作業の自動化 ― スプレッドシートのエラー行から CloudWatch ログを抽出し転記する（手動ファイル授受方式）</p>
+  </div>
+</header>
+
+<nav class="toptoc">
+  <div class="wrap">
+    <a class="toclink" href="#s1">1. 目的</a>
+    <a class="toclink" href="#s2">2. フロー</a>
+    <a class="toclink" href="#s3">3. 検証結果</a>
+    <a class="toclink" href="#s4">4. 4レイヤー検討</a>
+    <a class="toclink" href="#s5">5. 手動操作と注意</a>
+    <a class="toclink" href="#s6">6. ログ特定</a>
+    <a class="toclink" href="#s7">7. 列レイアウト</a>
+    <a class="toclink" href="#s8">8. 引き継ぎ</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <main>
+
+  <!-- 1 -->
+  <section id="s1">
+    <h2>1. 目的・ゴール</h2>
+    <p class="lead">これまで人手で行っていた「エラーのログ調査・転記」を半自動化する。最終的な対応要否の判断は人が行う。</p>
+    <ul class="tight">
+      <li><b>やること:</b> Slackアラートが集まるGoogleスプレッドシートの未処理行から、AWS CloudWatch のログを取得し、同じシートに転記する。</li>
+      <li><b>実行形態:</b> ローカルでの手動 Python 実行。<b>Google側はプログラムから触らず、人手でファイルを授受</b>する（.xlsxダウンロード → 処理 → 該当セルへ手動貼付）。</li>
+      <li><b>ゴール:</b> 運用チームが「対応要否」を目視判断しやすい状態（ログ本文＋コンソールへのリンク）にする。</li>
+    </ul>
+    <div class="danger"><b>セキュリティ方針（最重要）:</b> 本ツールは実行時に <b>AIを使用しない</b>。AWSアクセスキー・MFA等の資格情報をAIに渡さない／学習させないため、資格情報はローカルに閉じる。※開発段階でのAI活用は可。</div>
+    <div class="note"><b>方針転換の経緯（v2）:</b> 当初は Python から Google API（サービスアカウント / OAuth / GAS Web App）で直接シートを読み書きする案を検討。しかし <b>匿名Web Appは組織が禁止</b>・<b>Google Cloud プロジェクトの利用も見送り</b>となったため、<b>Google側はプログラムから触らず「人手でファイル授受」</b>する方式に変更。これにより GCP・認証まわりが一切不要になる。</div>
+    <div class="note"><b>フェーズ上の位置づけ:</b> Phase1=Slack収集（GAS稼働中）／<b>Phase2＝本ツール（ログ抽出。AI不使用）</b>／Phase3=AIが対応要否を判定／Phase4=月次集計。<b>AIは本ツールの後工程（Phase3）で使う</b>のが境界。</div>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <h2>2. 全体処理フロー</h2>
+    <p class="lead"><span class="tag-h">人手</span>＝手作業ステップ／<span class="tag-p">PC</span>＝Python(ローカル)。Google側はダウンロード/貼付の手作業で授受し、GCPは使わない。</p>
+    <div class="flow">
+      <div class="step"><div class="h">人手</div><div class="body"><b>スプレッドシートを .xlsx でダウンロード</b>（ファイル → ダウンロード → Microsoft Excel）</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">1</div><div class="body"><span class="tag-p">PC</span><b>python 実行</b> ― DLした.xlsxを入力に、実行年月のシートから<b>未処理行(D列が空)</b>を抽出</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">2</div><div class="body"><span class="tag-p">PC</span><b>AWS認証</b> ― <b>MFAを入力</b>し、<b>スイッチロール</b>で対象アカウントへ</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">3</div><div class="body"><span class="tag-p">PC</span><b>CloudWatchからログ取得</b> ― アラーム名からログを特定し前後N行を取得（<b>Logs Insights不使用</b>）→ コンソールへのリンク生成</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">4</div><div class="body"><span class="tag-p">PC</span><b>入力xlsxのコピーに転記</b> ― 該当行の D(ログ本文)・F(リンク) を書き込んだファイルを出力</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="h">人手</div><div class="body"><b>スプレッドシートへ手動で貼付</b> ― 該当行の <b>D列・F列だけ</b>を貼り付け（<b>丸ごと再アップロードはしない</b>）</div></div>
+    </div>
+  </section>
+
+  <!-- 3 検証結果 -->
+  <section id="s3" class="done">
+    <h2>3. 検証結果（stg環境で動作確認）</h2>
+    <p class="lead">2026-07-03、stg環境で試作版を実行し、<b>「スプシ→CloudWatchログ取得→xlsxへ転記」まで、ひと通り動くことを確認した</b>。</p>
+
+    <div class="good">
+      <b>確認できたこと（stg）:</b>
+      <ul class="tight" style="margin-bottom:0">
+        <li>DLした .xlsx の<b>未処理行(D空)の抽出</b></li>
+        <li>アラーム名 → <code>describe_alarms</code> → <code>describe_metric_filters</code> で<b>ロググループとフィルタを特定</b></li>
+        <li><code>filter_log_events</code>／<code>get_log_events</code> で<b>該当ERRORの前後N行を取得</b>（<b>Logs Insights不使用</b>）</li>
+        <li>入力xlsxのコピーへ <b>D列（ログ本文・折返し表示）・F列（「リンク」＝ハイパーリンク）を実際に転記</b></li>
+        <li><b>スイッチロール（プロファイル）＋MFA</b>で各stgアカウントへアクセス</li>
+      </ul>
+    </div>
+
+    <h3 id="s3-1"><span class="no">3-1</span>検証したアラーム（いずれもメトリクスフィルタ型）</h3>
+    <table>
+      <tr><th>アラーム</th><th>アカウント</th><th>特定できたロググループ / フィルタ</th><th>結果</th></tr>
+      <tr><td><code>duel-stg-delete-realtime-tran-work-errors-alarm</code>（2件）</td><td>851725190245</td><td><code>/aws/lambda/duel-stg-lambda-delete-realtime-tran-work</code> / <code>"[ERROR]"</code></td><td><span class="pill ok">取得OK・転記OK</span></td></tr>
+      <tr><td><code>strike-stg-app-log-errors-alarm</code></td><td>767397668053</td><td>（メトリクスフィルタ型・同経路で取得可能）</td><td><span class="pill ok">経路確認OK</span></td></tr>
+    </table>
+    <p style="font-size:13px;color:var(--muted)">検証資材: <code>検証\ログ取得検証\verify_pull_logs.py</code>（＋手順HTML）。</p>
+
+    <h3 id="s3-2"><span class="no">3-2</span>分かったこと・残課題</h3>
+    <table>
+      <tr><th>項目</th><th>内容</th></tr>
+      <tr><td>MFA回数</td><td>アカウント別に <code>assume_role</code> するため<b>アカウントごとにMFAを要求</b>。TOTPは使い回せず、2回目は<b>新しいコード</b>が必要。→ 実質1回にするには <code>get_session_token</code> 一括方式の作り込みが要（将来対応）。</td></tr>
+      <tr><td>アカウント構成</td><td>stgは<b>サービス別に別アカウント</b>（duel-stg=851725190245 / strike-stg=767397668053）。スイッチロール用プロファイルを接頭辞ごとにマッピング。</td></tr>
+      <tr><td>Step Functions系</td><td><code>AWS/States</code> のアラームは metric filter が無く別経路（失敗ステート＋error/cause）。本検証は未対応 → <b>次段で対応</b>（→ 6-3）。</td></tr>
+      <tr><td>その他</td><td>複数ERRORの全件列挙、Excelセル文字数上限での切詰（全文はリンク）等は本実装で調整。</td></tr>
+    </table>
+  </section>
+
+  <!-- 4 -->
+  <section id="s4">
+    <h2>4. 4レイヤーでの検討まとめ</h2>
+    <p class="lead">「起動 / インプット / 情報取得 / アウトプット」の各レイヤーの採用方針。Google側（②④）は<b>手動ファイル授受</b>に変更。</p>
+
+    <div class="grid">
+      <div class="layer"><div class="hd">① 起動</div><div class="bd"><span class="sel">採用: ローカル手動 python 実行</span><br>MFA手入力と相性◎・キーをローカル完結</div></div>
+      <div class="layer"><div class="hd">② インプット</div><div class="bd"><span class="sel">採用: DLした .xlsx を読む</span><br>人手でDL → openpyxl で読取（GCP/API不要）</div></div>
+      <div class="layer"><div class="hd">③ 情報取得</div><div class="bd"><span class="sel">採用: アラーム→ログ特定</span><br>Insights不使用・命名規約に依存しない</div></div>
+      <div class="layer"><div class="hd">④ アウトプット</div><div class="bd"><span class="sel">採用: xlsxコピーへ転記→手動貼付</span><br>D=ログ / F=リンク を該当行へ</div></div>
+    </div>
+
+    <h3 id="s4-1"><span class="no">4-1</span>① 起動レイヤー</h3>
+    <table>
+      <tr><th>案</th><th>評価</th><th>理由</th></tr>
+      <tr><td>ローカル手動 python 実行</td><td><span class="pill ok">◎ 採用</span></td><td>MFA手入力＋スイッチロールと相性◎。キーをローカル完結</td></tr>
+      <tr><td>OSタスクスケジューラ / cron 定期</td><td><span class="pill ng">✗</span></td><td>実行時のMFA手入力ができない</td></tr>
+      <tr><td>AWS側スケジュール(EventBridge+Lambda)</td><td><span class="pill ng">✗</span></td><td>「キーをローカル・手動MFA」方針と不整合</td></tr>
+    </table>
+    <div class="note"><b>結論:</b> 実行時にMFAを手入力する必要があるため、無人での自動実行はできない。「手動で起動し、その場でMFAを入力」が前提。</div>
+
+    <h3 id="s4-2"><span class="no">4-2</span>② インプット ／ ④ アウトプット（Google連携＝手動ファイル授受）</h3>
+    <table>
+      <tr><th>案</th><th>評価</th><th>理由</th></tr>
+      <tr><td><b>手動DLした .xlsx を読む → 転記済みファイル出力 → 手動貼付</b></td><td><span class="pill ok">◎ 採用</span></td><td>GCP・認証が一切不要。組織審査もTLSプロキシ(Google側)も回避</td></tr>
+      <tr><td>Python から Google API 直接（SA / OAuth）</td><td><span class="pill ng">✗</span></td><td>GCP利用が見送りのため不採用</td></tr>
+      <tr><td>GAS Web App 経由</td><td><span class="pill ng">✗</span></td><td>匿名公開が組織で禁止のため不成立</td></tr>
+    </table>
+    <div class="note"><b>利点と注意点:</b> GCP・認証が不要で実装も単純になる一方、<b>ダウンロードと貼付の手作業が増える</b>。<b>貼り戻し時は上書きに注意</b>が必要（→ 5章）。</div>
+
+    <h3 id="s4-3"><span class="no">4-3</span>③ 情報取得レイヤー（CloudWatch）</h3>
+    <p><b>やりたいこと:</b> アラーム名（B列）と発生時刻（A列）から、原因となった CloudWatch ログを取得する。詳しい辿り方は 6章。</p>
+    <table>
+      <tr><th>決めること</th><th>案</th><th>評価</th><th>理由</th></tr>
+      <tr><td rowspan="2">①どのロググループを見るか</td><td>アラームから辿って特定（API）</td><td><span class="pill ok">◎ 採用</span></td><td>命名規約に依存しない</td></tr>
+      <tr><td>アラーム名の規則から推測</td><td><span class="pill mid">△</span></td><td>速いが規約変更に弱い（保険として併用可）</td></tr>
+      <tr><td rowspan="2">②ログをどう取るか</td><td><code>get_log_events</code> で前後N行取得</td><td><span class="pill ok">◎ 採用</span></td><td>スキャン課金なし（無料）</td></tr>
+      <tr><td>Logs Insights</td><td><span class="pill ng">✗ 禁止</span></td><td>スキャン課金が発生するため</td></tr>
+    </table>
+    <div class="note"><b>認証:</b> スイッチロール（<code>assume_role</code>）＋MFA。<b>検証では正常動作を確認</b>（アカウントごとにMFA要求＝3-2参照）。</div>
+  </section>
+
+  <!-- 5 -->
+  <section id="s5">
+    <h2>5. 手動での操作と注意点</h2>
+    <p class="lead">Google側を人手で授受するための手順と、安全に貼り戻すための注意点。</p>
+
+    <h3 id="s5-1"><span class="no">5-1</span>手順</h3>
+    <ol class="steps">
+      <li><span class="tag-h">人手</span> 対象スプレッドシートを開く → <b>ファイル → ダウンロード → Microsoft Excel(.xlsx)</b> を保存</li>
+      <li><span class="tag-p">PC</span> <code>python run.py</code>（入力＝DLした.xlsx）→ 実行年月のシートの<b>未処理行(D空)</b>を抽出 → MFA入力 → CloudWatchからログ取得</li>
+      <li><span class="tag-p">PC</span> 入力xlsxのコピーに <b>D列（ログ）・F列（リンク）を転記</b>したファイルを出力</li>
+      <li><span class="tag-h">人手</span> 出力を見ながら、スプレッドシートの該当行の <b>D列・F列だけ</b>を貼り付け</li>
+    </ol>
+
+    <h3 id="s5-2"><span class="no">5-2</span>貼り戻しの注意（重要）</h3>
+    <div class="danger">
+      <b>丸ごと再アップロードはしない。</b> ダウンロード〜貼付の間も Phase1(GAS) が新しい行を追記し続けるため、出力ファイルを丸ごとアップロードすると<b>その間に増えた行を上書きして消す恐れ</b>がある（元チケットの「download→upload不可」と同じ懸念）。→ <b>処理した行の D・F セルだけを貼る</b>。
+    </div>
+    <ul class="tight">
+      <li><b>行の対応:</b> Phase1は末尾に追記のみ・並び替えなし。ダウンロード時点と貼付時点で<b>既存行の行番号は一致</b>する（間に手動で行挿入しない前提）。</li>
+      <li><b>取り違え防止:</b> 出力に<b>照合キー（A列=日時 / B列=アラーム名）</b>を併記し、貼付先の行が一致するか目視確認。</li>
+      <li><b>増えた新規行:</b> DL後に追記された行はD空のまま残り、<b>次回実行の対象</b>になる（取りこぼしなし）。</li>
+    </ul>
+  </section>
+
+  <!-- 6 -->
+  <section id="s6">
+    <h2>6. ログ特定のしくみ（CloudWatch）</h2>
+    <p class="lead">B列のアラーム名さえあれば、課金対象の Logs Insights を使わず、AWSのAPIだけで対象ログまで辿れる。<b>この方法は3章の検証で動作を確認している。</b></p>
+
+    <h3 id="s6-1"><span class="no">6-1</span>入力列（A/B/C）の意味</h3>
+    <table>
+      <tr><th>列</th><th>意味</th><th>サンプル</th></tr>
+      <tr><td>A</td><td>タイムゾーン日付（<b>UTC</b>）</td><td><code>2026-05-31 15:38:30</code></td></tr>
+      <tr><td>B</td><td>ALARM（CloudWatchアラーム名）</td><td><code>strike-stg-app-log-errors-alarm</code></td></tr>
+      <tr><td>C</td><td>TIME（<b>JST</b>＝A＋9h）</td><td><code>2026-06-01 0:38:30</code></td></tr>
+    </table>
+
+    <h3 id="s6-2"><span class="no">6-2</span>ログ特定チェーン（Insights 不使用で成立）</h3>
+    <div class="chain">
+B列アラーム名 <span class="n">duel-stg-delete-realtime-tran-work-errors-alarm</span>
+  └─▶ <span class="c">describe_alarms</span>          … アラームの Namespace / MetricName を取得
+        └─▶ <span class="c">describe_metric_filters</span>  … <span class="g">「ロググループ名 + フィルタパターン」</span>を取得
+              └─▶ <span class="c">filter_log_events</span>      … A列時刻の<span class="g">前後X分</span>で該当イベントを特定
+                    └─▶ <span class="c">get_log_events</span>      … 該当イベントの<span class="g">前後N行</span>を取得（N可変）
+                          └─▶ コンソールの<span class="g">リンク</span>生成 → F列へ
+    </div>
+    <div class="good"><b>検証で確認:</b> 上記チェーンで <code>/aws/lambda/duel-stg-lambda-delete-realtime-tran-work</code>（フィルタ <code>"[ERROR]"</code>）を特定し、前後N行を取得できた。<code>GetLogEvents</code>/<code>FilterLogEvents</code> はスキャン課金がかからない。</div>
+
+    <h3 id="s6-3"><span class="no">6-3</span>エラー発生源による分岐（張り付ける内容が変わる）</h3>
+    <p>発生源（Lambda / Step Functions / Fargate 等）によって、辿り方も<b>張り付ける内容</b>も変わる。判定キーは<b>アラームのメトリクス種別</b>。</p>
+    <table>
+      <tr><th>メトリクス種別</th><th>主な発生源</th><th>取得経路</th><th>D列（本文）に張り付ける内容</th><th>状態</th></tr>
+      <tr><td>ログのメトリクスフィルタ（カスタム）</td><td>Lambda / アプリ(Fargate・EC2)のログ</td><td>describe_metric_filters → ロググループ → filter / get_log_events</td><td>該当ERROR＋<b>前後N行</b></td><td><span class="pill ok">検証済</span></td></tr>
+      <tr><td><code>AWS/Lambda</code>（ネイティブ）</td><td>Lambda</td><td>FunctionName → <code>/aws/lambda/{名前}</code></td><td>該当ERROR＋前後N行</td><td>簡易対応</td></tr>
+      <tr><td><code>AWS/States</code></td><td>Step Functions</td><td>StateMachineArn → 実行履歴API（失敗実行）</td><td><b>失敗ステート＋ error / cause</b></td><td><span class="pill mid">次段で対応</span></td></tr>
+      <tr><td><code>AWS/ECS</code> 等</td><td>Fargate / ECS</td><td>タスクのロググループ</td><td>該当ERROR＋前後N行</td><td>要確認</td></tr>
+    </table>
+    <div class="note"><b>実装方針:</b> 発生源ごとに取得経路と出力の作りを切り替えられるようにする。Step Functions は前後N行が馴染まないため、失敗ステート＋error/cause＋実行画面リンクを主とする。どのアラーム種別があるかは事前に確認しておく。</div>
+  </section>
+
+  <!-- 7 -->
+  <section id="s7">
+    <h2>7. 列レイアウト</h2>
+    <p class="lead">出力先の列と役割。運用チームが目視で確認しやすいことを重視する。</p>
+    <table>
+      <tr><th>列</th><th>用途</th><th>誰が書くか</th></tr>
+      <tr><td>A / B / C</td><td>日付(UTC) / アラーム名 / 日時(JST)</td><td>既存GAS(Phase1)が自動収集</td></tr>
+      <tr><td><b>D</b></td><td><b>ERRORS＝ログ本文</b>（折返し表示・該当なし時は理由）</td><td><b>本ツールが生成→人手で貼付</b></td></tr>
+      <tr><td>E</td><td>対応要不要（色付け）</td><td>人／Phase3のAI（ツールは触らない）</td></tr>
+      <tr><td><b>F（新規）</b></td><td><b>「リンク」＝ログへのハイパーリンク</b></td><td><b>本ツールが生成→人手で貼付</b></td></tr>
+    </table>
+    <div class="note"><b>未転記の判定＝D列が空かどうか</b>。該当ログが無い時もDに「該当なし＋理由」を記載し、常に非空にして二重抽出を防ぐ。ツールが出すD・Fを、人/Phase3がEの判断に使う。</div>
+    <div class="note"><b>処理対象行の方針:</b> 当面は「<b>D列が空の全行</b>」を処理する。将来的に<b>専用フラグ列を設けて処理対象だけを選別</b>する案もあるが、取得したログは<b>今後AIが各エラーの重要度（大／小）を判断するためのインプットになる</b>と考えているため、一旦は<b>全行処理</b>とする。</div>
+  </section>
+
+  <!-- 8 -->
+  <section id="s8">
+    <h2>8. 引き継ぎ・資材構成</h2>
+    <p class="lead">別メンバーが「資材を渡されれば実行できる」ことを目標に構成。GitHub管理は不要。Google認証もGCPも不要。</p>
+    <h3 id="s8-1"><span class="no">8-1</span>配布フォルダ構成</h3>
+    <div class="ftree">
+      <div class="root">📁 アラートログ収集ツール/ <span style="font-weight:400;color:var(--muted);font-size:13px">（zip で配布）</span></div>
+      <div class="kids">
+        <div class="item"><span class="ic">📄</span><span class="nm">README.md</span><span class="ds">前提・セットアップ・実行・貼付の手順</span></div>
+        <div class="item"><span class="ic">🐍</span><span class="nm">run.py</span><span class="ds">実行するのはこれだけ（1ファイル完結）</span></div>
+        <div class="item hi"><span class="ic">⚙️</span><span class="nm">config.yaml</span><span class="ds">各自ここだけ編集（コードは触らない）</span></div>
+        <div class="item"><span class="ic">📄</span><span class="nm">requirements.txt</span><span class="ds">依存パッケージ（boto3 / openpyxl / truststore）</span></div>
+        <div class="item hi"><span class="ic">📁</span><span class="nm">input/</span><span class="ds">DLした .xlsx をここに置く</span></div>
+        <div class="item hi"><span class="ic">📁</span><span class="nm">output/</span><span class="ds">転記済みファイルが出る</span></div>
+        <div class="item"><span class="ic">📁</span><span class="nm">certs/</span><span class="ds">社内CA証明書(.pem)（使う場合）</span></div>
+        <div class="item"><span class="ic">📁</span><span class="nm">logs/</span><span class="ds">実行ログ（記録・トラブル確認用）</span></div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">※ AWSのプロファイル（<code>~/.aws/config</code>）は各自のPC側にあり、この配布フォルダの外。README に「前提」として記載。</p>
+
+    <h3 id="s8-2"><span class="no">8-2</span>config.yaml（各自の名称差を吸収）</h3>
+    <p style="font-size:14px">プロファイル名など<b>人によって違う設定は config.yaml に集約</b>。コードは編集不要。</p>
+    <ul class="tight">
+      <li><code>input_dir</code> / <code>output_dir</code>（入出力フォルダ）／<code>sheet_name</code>（空=当月自動）</li>
+      <li><code>region</code> ／ <code>profiles</code>（接頭辞→<b>スイッチロール用プロファイル名</b>）</li>
+      <li><code>lines_before</code> / <code>lines_after</code>（取得行数N）／<code>window_min</code>（時間窓）</li>
+      <li>列マッピング（入力A/B・出力 D=ログ / F=リンク）</li>
+      <li><code>ca_bundle</code>（社内CA証明書のパス。空なら truststore）</li>
+    </ul>
+    <div class="note"><b>社内CA:</b> 社内TLS検査プロキシがあるため、<b>AWS通信(boto3)では証明書対応が必要</b>（truststore か 社内CA.pem）。Google通信は行わないためGoogle側のCA対応は不要。<b>検証では truststore で疎通確認済み。</b></div>
+  </section>
+
+  </main>
+
+  <aside class="sidenav">
+    <div class="ttl">目次</div>
+    <a class="toclink lvl1" href="#s1">1. 目的・ゴール</a>
+    <a class="toclink lvl1" href="#s2">2. 全体処理フロー</a>
+    <a class="toclink lvl1" href="#s3">3. 検証結果</a>
+    <a class="toclink lvl2" href="#s3-1">3-1 検証したアラーム</a>
+    <a class="toclink lvl2" href="#s3-2">3-2 分かったこと・残課題</a>
+    <a class="toclink lvl1" href="#s4">4. 4レイヤー検討まとめ</a>
+    <a class="toclink lvl2" href="#s4-1">4-1 起動</a>
+    <a class="toclink lvl2" href="#s4-2">4-2 入力/出力（手動）</a>
+    <a class="toclink lvl2" href="#s4-3">4-3 情報取得</a>
+    <a class="toclink lvl1" href="#s5">5. 手動操作と注意</a>
+    <a class="toclink lvl2" href="#s5-1">5-1 手順</a>
+    <a class="toclink lvl2" href="#s5-2">5-2 貼り戻しの注意</a>
+    <a class="toclink lvl1" href="#s6">6. ログ特定のしくみ</a>
+    <a class="toclink lvl2" href="#s6-1">6-1 入力列の意味</a>
+    <a class="toclink lvl2" href="#s6-2">6-2 特定チェーン</a>
+    <a class="toclink lvl2" href="#s6-3">6-3 発生源による分岐</a>
+    <a class="toclink lvl1" href="#s7">7. 列レイアウト</a>
+    <a class="toclink lvl1" href="#s8">8. 引き継ぎ・資材</a>
+    <a class="toclink lvl2" href="#s8-1">8-1 配布フォルダ構成</a>
+    <a class="toclink lvl2" href="#s8-2">8-2 config.yaml</a>
+  </aside>
+
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toclink'));
+  var targets = Array.prototype.slice.call(document.querySelectorAll('main [id]'));
+  function onScroll(){
+    var current = targets.length ? targets[0].id : null;
+    for(var i=0;i<targets.length;i++){
+      if(targets[i].getBoundingClientRect().top <= 140){ current = targets[i].id; }
+    }
+    for(var j=0;j<links.length;j++){
+      var a = links[j];
+      if(a.getAttribute('href') === '#'+current){ a.classList.add('active'); }
+      else { a.classList.remove('active'); }
+    }
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  document.addEventListener('DOMContentLoaded', onScroll);
+  onScroll();
+})();
+</script>
+
+</body>
+</html>

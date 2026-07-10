@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAS Web App 接続テスト 手順書</title>
+<style>
+  :root{ --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --accent:#2563eb; --ok:#16a34a; --ng:#dc2626; --warn:#d97706; --soft:#f8fafc; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Yu Gothic UI","Meiryo",sans-serif;color:var(--ink);background:#eef2f7;line-height:1.75}
+  header.hero{background:linear-gradient(135deg,#0d9488,#0ea5e9);color:#fff;padding:40px 32px}
+  header.hero .wrap{max-width:960px;margin:0 auto}
+  header.hero h1{margin:0 0 8px;font-size:26px}
+  header.hero p{margin:4px 0;opacity:.95}
+  .badge-row{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:4px 12px;font-size:13px}
+  nav.toc{position:sticky;top:0;z-index:10;background:#0f172a;color:#cbd5e1;padding:10px 32px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  nav.toc .wrap{max-width:960px;margin:0 auto;display:flex;gap:18px;flex-wrap:wrap}
+  nav.toc a{color:#cbd5e1;text-decoration:none}
+  nav.toc a:hover{color:#fff;text-decoration:underline}
+  main{max-width:960px;margin:0 auto;padding:8px 32px 80px}
+  section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin:22px 0;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  section h2{margin:0 0 14px;font-size:20px;color:#0f172a;border-left:6px solid var(--accent);padding-left:12px}
+  ol,ul{margin:8px 0;padding-left:24px}
+  li{margin:6px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--soft);color:#334155;font-weight:600}
+  tr:nth-child(even) td{background:#fcfdff}
+  code{background:#eef2ff;color:#3730a3;border-radius:5px;padding:1px 6px;font-family:"Consolas",monospace;font-size:13px}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow-x:auto;font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.6}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid var(--warn);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .good{background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid var(--ok);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700}
+  .pill.ok{background:#dcfce7;color:var(--ok)}
+  .pill.ng{background:#fee2e2;color:var(--ng)}
+  .step-num{display:inline-block;background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:700;margin-right:6px}
+  footer{max-width:960px;margin:0 auto;padding:20px 32px 60px;color:var(--muted);font-size:13px}
+  @media print{nav.toc{display:none}body{background:#fff}section{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>GAS Web App 接続テスト 手順書</h1>
+    <p>「ローカルPythonから、サーバー上のGASを起動できるか」を、あなたの手元で検証する</p>
+    <div class="badge-row">
+      <span class="badge">所要: 10分</span>
+      <span class="badge">Q5（公開デプロイ可否）の確認も兼ねる</span>
+      <span class="badge">関連: gas_test_Code.gs / gas_test_client.py</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#purpose">目的</a>
+    <a href="#s0">0. 事前準備</a>
+    <a href="#s1">1. GASを用意</a>
+    <a href="#s2">2. Web Appデプロイ</a>
+    <a href="#s3">3. Python実行</a>
+    <a href="#s4">4. 結果の見方</a>
+    <a href="#note">補足</a>
+  </div>
+</nav>
+
+<main>
+
+  <section id="purpose">
+    <h2>目的</h2>
+    <p>本方式の肝である「<b>ローカルのPython → サーバー上のGAS</b>」の起動（往復通信）が成立するかを確認する。</p>
+    <div class="good">
+      このテストは <b>GoogleもAWSも認証しません</b>（HTTPでGAS Web Appを叩くだけ）。<br>
+      同時に <b>Q5＝「アクセス=全員」でWeb Appを公開デプロイできるか</b> も判明します（組織ポリシー確認を兼ねる）。
+    </div>
+    <div class="note"><b>推奨:</b> 本番のPhase1プロジェクトではなく、<b>テスト用に新規スプレッドシート＋スクリプト</b>で試す（本番のデプロイに影響しないため）。</div>
+  </section>
+
+  <section id="s0">
+    <h2><span class="step-num">0</span>事前準備</h2>
+    <pre>pip install requests</pre>
+  </section>
+
+  <section id="s1">
+    <h2><span class="step-num">1</span>テスト用GASを用意</h2>
+    <ol>
+      <li>新規スプレッドシートを作成（<a href="https://sheets.new" target="_blank" rel="noopener">https://sheets.new</a>）</li>
+      <li>メニュー <b>拡張機能 → Apps Script</b></li>
+      <li>既定の <code>Code.gs</code> の中身を全消去し、<b><code>gas_test_Code.gs</code> の内容を丸ごと貼り付け</b>て保存</li>
+      <li>コード上部の <code>SHARED_TOKEN</code> を任意の合言葉に変更（例: <code>taxi-test-2026</code>）</li>
+    </ol>
+  </section>
+
+  <section id="s2">
+    <h2><span class="step-num">2</span>ウェブアプリとしてデプロイ</h2>
+    <ol>
+      <li>右上 <b>デプロイ → 新しいデプロイ</b></li>
+      <li>種類の選択（歯車）→ <b>ウェブアプリ</b></li>
+      <li>設定:
+        <ul>
+          <li>説明: 任意</li>
+          <li><b>実行するユーザー: 自分</b></li>
+          <li><b>アクセスできるユーザー: 全員</b></li>
+        </ul>
+      </li>
+      <li><b>デプロイ</b> → 初回は <b>アクセスを承認</b>（自分のアカウントで許可）</li>
+      <li>表示される <b>ウェブアプリ URL（末尾が <code>/exec</code>）</b> をコピー</li>
+    </ol>
+    <div class="note"><b>ここで判明するQ5:</b> 「アクセスできるユーザー」で <b>「全員」が選べない／デプロイがブロックされる</b> 場合は、組織が公開Web Appを制限しています。その旨をメモしてください（→ サービスアカウント等の代替検討へ）。</div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="step-num">3</span>Pythonから実行</h2>
+    <p><code>gas_test_client.py</code> の上部を編集:</p>
+    <pre>WEBAPP_URL   = "（コピーした /exec URL）"
+SHARED_TOKEN = "（GASと同じ合言葉）"
+SHEET_ID     = ""   # 任意: シート読取も試すなら対象シートのID</pre>
+    <p>実行:</p>
+    <pre>python gas_test_client.py</pre>
+  </section>
+
+  <section id="s4">
+    <h2><span class="step-num">4</span>結果の見方</h2>
+    <table>
+      <tr><th>応答</th><th>意味</th><th>判定</th></tr>
+      <tr><td><code>"ok": true</code> ＋ <code>"message": "hello from GAS"</code></td><td>ローカル→サーバーGASの起動<b>成功</b></td><td><span class="pill ok">この方式で進められる</span></td></tr>
+      <tr><td>（SHEET_ID指定時）<code>spreadsheetName</code> / <code>a1</code> が返る</td><td>GASからの<b>シート読取も成功</b></td><td><span class="pill ok">読取もOK</span></td></tr>
+      <tr><td><code>"ok": false, "error":"invalid token"</code></td><td>合言葉の不一致</td><td>GASとPythonの <code>SHARED_TOKEN</code> を一致させる</td></tr>
+      <tr><td>JSONでなくHTMLが返る</td><td>URL違い／未デプロイ／アクセス制限</td><td>URL末尾 <code>/exec</code>・デプロイ済み・アクセス=全員 を確認</td></tr>
+      <tr><td>「全員」が選べずデプロイ不可</td><td>組織が公開Web Appを<b>制限</b></td><td><span class="pill ng">Q5: 代替方式を検討</span></td></tr>
+    </table>
+  </section>
+
+  <section id="note">
+    <h2>補足</h2>
+    <ul>
+      <li><b>GETが成功すれば「起動できる」ことの証明として十分</b>です。POSTはApps Scriptのリダイレクト仕様でボディが落ちる場合がありますが、<code>ok:true</code> が返れば起動自体は成功しています（本実装では送り方を調整します）。</li>
+      <li>このテストで作ったスプレッドシート／デプロイは、確認後に削除して構いません。</li>
+      <li>結果は「<b>ok:true が出た</b>」か「<b>全員でデプロイできずブロック</b>」かだけ共有いただければ十分です（URLやトークンの共有は不要）。</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  GAS Web App 接続テスト 手順書（関連: gas_test_Code.gs / gas_test_client.py / 設計たたき台HTML）。本テストはGoogle/AWSの資格情報を扱いません。
+</footer>
+
+</body>
+</html>

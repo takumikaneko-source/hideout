@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slack通知アラート ログ収集ツール 設計（たたき台）</title>
+<style>
+  :root{--panel:#ffffff;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb;--ok:#16a34a;--ng:#dc2626;--warn:#d97706;--soft:#f8fafc}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Segoe UI","Yu Gothic UI","Meiryo",sans-serif;color:var(--ink);background:#eef2f7;line-height:1.7}
+  header.hero{background:linear-gradient(135deg,#1e3a8a,#0ea5e9);color:#fff;padding:48px 32px}
+  header.hero .wrap{max-width:1320px;margin:0 auto}
+  header.hero h1{margin:0 0 8px;font-size:30px;letter-spacing:.02em}
+  header.hero p{margin:4px 0;opacity:.95}
+  nav.toptoc{position:sticky;top:0;z-index:10;background:#fff;color:#475569;padding:10px 32px;font-size:13px;border-bottom:1px solid var(--line);box-shadow:0 2px 8px rgba(15,23,42,.06)}
+  nav.toptoc .wrap{max-width:1320px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  nav.toptoc a{color:#475569;text-decoration:none}
+  nav.toptoc a.active,nav.toptoc a:hover{color:#1d4ed8;font-weight:600}
+  .layout{max-width:1320px;margin:0 auto;padding:0 24px;display:flex;gap:28px;align-items:flex-start}
+  main{flex:1 1 auto;min-width:0;max-width:1010px;padding:8px 0 80px}
+  aside.sidenav{flex:0 0 240px;position:sticky;top:18px;align-self:flex-start;max-height:calc(100vh - 36px);overflow:auto;background:#fff;color:#475569;border:1px solid var(--line);border-radius:12px;padding:14px 12px;margin-top:22px;font-size:13px;box-shadow:0 1px 4px rgba(15,23,42,.06)}
+  aside.sidenav .ttl{font-weight:700;color:#94a3b8;font-size:12px;letter-spacing:.08em;padding:2px 8px 8px}
+  aside.sidenav a{display:block;color:#475569;text-decoration:none;border-radius:7px;padding:5px 8px;margin:1px 0;line-height:1.45;border-left:3px solid transparent}
+  aside.sidenav a.lvl1{font-weight:600;color:#334155}
+  aside.sidenav a.lvl2{font-size:12px;color:#64748b;padding-left:20px}
+  aside.sidenav a:hover{background:#f1f5f9;color:#1e293b}
+  aside.sidenav a.active{background:#eff6ff;color:#1d4ed8;border-left-color:#60a5fa}
+  aside.sidenav a.lvl2.active{color:#2563eb}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 28px;margin:22px 0;box-shadow:0 1px 3px rgba(15,23,42,.06);scroll-margin-top:72px}
+  section h2{margin:0 0 6px;font-size:22px;color:#0f172a;border-left:6px solid var(--accent);padding-left:12px}
+  section .lead{color:var(--muted);margin:0 0 18px;padding-left:18px}
+  h3{font-size:16px;margin:22px 0 8px;color:#1e3a8a;scroll-margin-top:72px}
+  h3 .no{display:inline-block;background:#1e3a8a;color:#fff;border-radius:6px;font-size:12px;padding:1px 8px;margin-right:8px;vertical-align:middle}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--soft);color:#334155;font-weight:600}
+  tr:nth-child(even) td{background:#fcfdff}
+  .note table td{background:#fff}
+  .note table th{background:#f1f5f9}
+  .pill{display:inline-block;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+  .pill.ok{background:#dcfce7;color:var(--ok)}
+  .pill.ng{background:#fee2e2;color:var(--ng)}
+  .pill.mid{background:#fef9c3;color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0}
+  .layer{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .layer .hd{padding:10px 12px;font-weight:700;color:#fff;font-size:14px}
+  .layer:nth-child(1) .hd{background:#2563eb}
+  .layer:nth-child(2) .hd{background:#0ea5e9}
+  .layer:nth-child(3) .hd{background:#0891b2}
+  .layer:nth-child(4) .hd{background:#0d9488}
+  .layer .bd{padding:10px 12px;font-size:13px}
+  .layer .bd .sel{color:#0f172a;font-weight:700}
+  .flow{display:flex;flex-direction:column;gap:0;margin:18px 0}
+  .step{display:flex;gap:14px;align-items:flex-start}
+  .step .num{flex:0 0 34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .step .body{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:6px}
+  .step .body b{color:#1e3a8a}
+  .arrowv{margin:2px 0 2px 16px;color:var(--accent);font-size:18px}
+  .chain{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:18px 20px;font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.9;overflow-x:auto}
+  .chain .c{color:#7dd3fc}.chain .n{color:#fca5a5}.chain .g{color:#86efac}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid var(--warn);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .good{background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid var(--ok);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .danger{background:#fef2f2;border:1px solid #fecaca;border-left:5px solid var(--ng);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  code{background:#eef2ff;color:#3730a3;border-radius:5px;padding:1px 6px;font-family:"Consolas",monospace;font-size:13px}
+  ul.tight{margin:8px 0;padding-left:22px}
+  ul.tight li{margin:4px 0}
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .checkitem{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .checkitem .q{flex:0 0 26px;color:var(--warn);font-weight:800}
+  .who{display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:6px;padding:1px 8px;font-size:12px;margin-left:6px}
+  aside.sidenav{display:block}
+  nav.toptoc{display:none}
+  @media(max-width:1180px){aside.sidenav{display:none}nav.toptoc{display:block}.layout{display:block;padding:0 32px}main{max-width:1080px;margin:0 auto}.cols2{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}}
+  @media print{nav.toptoc,aside.sidenav{display:none}body{background:#fff}.layout{display:block}section{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Slack通知アラート ログ収集ツール 設計（たたき台）</h1>
+    <p>人手によるAWS運用作業の自動化 ― スプレッドシートのエラー行から CloudWatch ログを抽出し転記する</p>
+  </div>
+</header>
+
+<nav class="toptoc">
+  <div class="wrap">
+    <a class="toclink" href="#s1">1. 目的</a>
+    <a class="toclink" href="#s2">2. 4レイヤー検討</a>
+    <a class="toclink" href="#s3">3. フロー</a>
+    <a class="toclink" href="#s4">4. 実現方法</a>
+    <a class="toclink" href="#s5">5. 検証・論点 ★</a>
+    <a class="toclink" href="#s6">6. ログ特定</a>
+    <a class="toclink" href="#s7">7. 列レイアウト</a>
+    <a class="toclink" href="#s8">8. 引き継ぎ</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <main>
+
+  <!-- 1 -->
+  <section id="s1">
+    <h2>1. 目的・ゴール</h2>
+    <p class="lead">これまで人手で行っていた「エラーのログ調査・転記」を半自動化する。最終的な対応要否の判断は人が行う。</p>
+    <ul class="tight">
+      <li><b>やること:</b> Slackアラートが集まるGoogleスプレッドシートの未処理行から、AWS CloudWatch のログを取得し、同じシートに転記する。</li>
+      <li><b>実行形態:</b> ローカルでの手動 Python 実行（無人の自動実行はしない）。</li>
+      <li><b>ゴール:</b> 運用チームが「対応要否」を目視判断しやすい状態（ログ本文＋コンソールへのリンク）にする。</li>
+    </ul>
+    <div class="danger"><b>セキュリティ方針（最重要）:</b> 本ツールは実行時に <b>AIを使用しない</b>。AWSアクセスキー・MFA等の資格情報をAIに渡さない／学習させないため、資格情報はローカルに閉じる。※開発段階でのAI活用は可。</div>
+    <div class="note"><b>フェーズ上の位置づけ:</b> Phase1=Slack収集（GAS稼働中）／<b>Phase2＝本ツール（ログ抽出。AI不使用）</b>／Phase3=AIが対応要否を判定／Phase4=月次集計。<b>AIは本ツールの後工程（Phase3）で使う</b>のが境界。</div>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <h2>2. 4レイヤーでの検討まとめ</h2>
+    <p class="lead">「起動 / インプット / 情報取得 / アウトプット」の各レイヤーで複数案を比較した結果。AWS側（①③）は確定、Google側（②④）は選定中。</p>
+
+    <div class="grid">
+      <div class="layer"><div class="hd">① 起動</div><div class="bd"><span class="sel">採用: ローカル手動 python 実行</span><br>MFA手入力と相性◎・キーをローカル完結</div></div>
+      <div class="layer"><div class="hd">② インプット</div><div class="bd"><span class="sel">選定中（→4・5章）</span><br>匿名GAS Web App=不可／SA直=本命</div></div>
+      <div class="layer"><div class="hd">③ 情報取得</div><div class="bd"><span class="sel">採用: アラーム→メトリクスフィルタ→ログ</span><br>Insights不使用・規約非依存で堅牢</div></div>
+      <div class="layer"><div class="hd">④ アウトプット</div><div class="bd"><span class="sel">②に追従</span><br>D=ログ本文 / F=リンク を書込</div></div>
+    </div>
+
+    <h3 id="s2-1"><span class="no">2-1</span>① 起動レイヤー</h3>
+    <table>
+      <tr><th>案</th><th>評価</th><th>理由</th></tr>
+      <tr><td>ローカル手動 python 実行</td><td><span class="pill ok">◎ 採用</span></td><td>MFA手入力（1回）＋スイッチロールと相性◎。キーをローカル完結</td></tr>
+      <tr><td>OSタスクスケジューラ / cron 定期</td><td><span class="pill ng">✗</span></td><td>実行時のMFA手入力ができない</td></tr>
+      <tr><td>GAS時間トリガ</td><td><span class="pill ng">✗</span></td><td>AWS資格情報をGoogle側に置けない／MFA不可</td></tr>
+      <tr><td>AWS側スケジュール(EventBridge+Lambda)</td><td><span class="pill ng">✗</span></td><td>「キーをローカル・手動MFA」方針と不整合</td></tr>
+    </table>
+    <div class="note"><b>結論:</b> MFA手入力が必須要件である以上、無人の自動スケジュールは原理的に不可。「手動起動＋実行時MFA」が大前提。</div>
+
+    <h3 id="s2-2"><span class="no">2-2</span>② インプット ／ ④ アウトプット（Google連携）</h3>
+    <div class="note"><b>Google側の読み書き方式</b>は 4章（実現方法の候補）・5章（検証結果）で詳述。要点のみ：匿名GAS Web App＝<b>検証で不可</b>／<b>サービスアカウント直Sheets API＝本命</b>（要GCP・各自認証なし）／OAuth直＝予備。決定後、入力（未転記行の取得）と出力（D=ログ・F=リンクの書込）は同じ方式で行う。</div>
+
+    <h3 id="s2-3"><span class="no">2-3</span>③ 情報取得レイヤー（CloudWatch）</h3>
+    <p><b>やりたいこと:</b> アラーム名（B列）と発生時刻（A列）を手がかりに、<b>原因となった CloudWatch のログを取得する</b>。</p>
+    <p><b>採用する方法:</b> ①アラームから「そのアラームが見張っているロググループ」をAPIで特定 → ②その時間帯の該当ログを<b>無料のログ取得API</b>で前後N行取得。<b>課金される Logs Insights は使わない</b>。具体的な辿り方は <b>6章「ログ特定のしくみ」</b> を参照。</p>
+    <p style="margin:10px 0 4px;color:var(--muted);font-size:13px">↓ 上記の方法を選ぶにあたり比較した選択肢（決めることは2つ）</p>
+    <table>
+      <tr><th>決めること</th><th>案</th><th>評価</th><th>理由</th></tr>
+      <tr><td rowspan="2">①どのロググループを見るか</td><td>アラームから辿って特定（API）</td><td><span class="pill ok">◎ 採用</span></td><td>命名規約に依存せず堅牢</td></tr>
+      <tr><td>アラーム名の規則から推測</td><td><span class="pill mid">△</span></td><td>速いが規約変更に弱い（保険として併用可）</td></tr>
+      <tr><td rowspan="2">②ログをどう取るか</td><td><code>get_log_events</code> で前後N行取得</td><td><span class="pill ok">◎ 採用</span></td><td>スキャン課金なし（無料）</td></tr>
+      <tr><td>Logs Insights</td><td><span class="pill ng">✗ 禁止</span></td><td>スキャン課金が発生するため</td></tr>
+    </table>
+    <div class="note"><b>認証:</b> <b>1回のMFA</b>でMFA済みセッションを取得 → 各環境へ<b>スイッチロール</b>（assume_role）。追加のMFA入力は不要。</div>
+  </section>
+
+  <!-- 3 -->
+  <section id="s3">
+    <h2>3. 全体処理フロー</h2>
+    <p class="lead">AWS側＝ローカルPythonで確定。Google側（シート読み書き）の方式は選定中（→ 4・5章）。</p>
+    <div class="flow">
+      <div class="step"><div class="num">1</div><div class="body"><b>手動で python 実行</b>（設定ファイルを読込）</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">2</div><div class="body"><b>シートの未処理行を読む</b> ― 実行時の年度ファイル・年月シートから「D列（ログ）が空の行」を取得</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">3</div><div class="body"><b>AWS認証</b> ― <b>MFAを1回入力</b>し、<b>スイッチロール</b>で各環境へ（追加のMFA入力は不要）</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">4</div><div class="body"><b>CloudWatchからログ取得</b> ― アラーム名からログを特定し、前後N行を取得（<b>Logs Insights不使用</b>＝課金回避）→ コンソールへのリンクを生成</div></div>
+      <div class="arrowv">▼</div>
+      <div class="step"><div class="num">5</div><div class="body"><b>シートに転記</b> ― D列＝ログ本文、F列＝リンク。転記済みの行は再実行でスキップ（重複防止）</div></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="s4">
+    <h2>4. 実現方法の候補（Google連携の手段）</h2>
+    <p class="lead">「Python（ツール）がスプレッドシートを自動で読み書きする手段」の候補を、前提知識なしで説明します。プログラムが自動で読み書きするには「正式な入口（API）」と「身分証明（認証）」が要り、そのやり方が複数あります。</p>
+
+    <h3 id="s4-1"><span class="no">4-1</span>候補①：GAS Web App　<span class="pill ng">検証の結果：不可</span></h3>
+    <p>既存のGAS（Google上で動くプログラム）に「外から呼べる窓口」を付け、PCのツールがそれを呼んでシートを読み書きしてもらう案。ツール側の設定が最も少なくて済むが、<b>「誰でも呼べる窓口（匿名公開）」を社内ルールが禁止</b>しており、呼ぶとログイン画面に弾かれた（→ 5章）。</p>
+
+    <h3 id="s4-2"><span class="no">4-2</span>候補②：サービスアカウント　<span class="pill mid">本命・要確認</span></h3>
+    <p>「<b>プログラム専用の利用者</b>（ロボットのアカウント）」を1つ作り、そのアカウントにシートを共有する。ツールは<b>鍵ファイル</b>を使って人の代わりに読み書きする。利用者ごとのログインが不要で<b>引き継ぎが楽</b>。ただし<b>Google Cloudプロジェクトと鍵ファイルの作成が必要</b>で、社内が許すか要確認（→ 5章）。</p>
+
+    <h3 id="s4-3"><span class="no">4-3</span>候補③：OAuthユーザー認証　<span class="pill mid">予備</span></h3>
+    <p>ツールを<b>あなた自身（ログインした人）として</b>動かす案。初回だけブラウザで「許可」を押す。使う人ごとに初回操作が要る。GCPプロジェクトも必要。</p>
+
+    <h3 id="s4-4"><span class="no">4-4</span>候補④：AWS中継　<span class="pill mid">最終手段</span></h3>
+    <p>どうしてもGoogleへ直接入れない場合に、AWS側を“受け渡し場所”にして連携する案（既存GASは外向き通信は可）。しくみが複雑になるため最終手段。</p>
+
+    <div class="note"><b>AWS側をGASに載せない理由（参考）:</b> AWSの資格情報・MFAをGoogleクラウド側に置けず、対話的なMFA入力もGASのモデルに乗らないため。＝AWS処理はローカルPythonに置く。</div>
+  </section>
+
+  <!-- 5 -->
+  <section id="s5">
+    <h2>5. 検証結果と論点（会議で決めたいこと）★</h2>
+    <p class="lead">Google連携の方式を実機検証した結果、当初案（匿名GAS Web App）は組織制限で不可と判明。方式の再決定が必要。本資料の中心論点。</p>
+
+    <h3 id="s5-1"><span class="no">5-1</span>検証で判明した社内制約</h3>
+    <table>
+      <tr><th>項目</th><th>結果と影響</th></tr>
+      <tr><td>社内TLS検査プロキシ</td><td>自己署名のルート証明書を挟むため、<b>AWS/Google両方の通信で証明書対応が必須</b>（truststore か 社内CA(.pem) 指定）。</td></tr>
+      <tr><td>GAS匿名Web App</td><td>公開設定で「全員」が選べず<b>「会社内の全員」まで</b>＝匿名公開不可。当初案（GCP不要）は<b>不成立</b>。</td></tr>
+    </table>
+    <div class="note"><b>用語解説：社内TLS検査プロキシとは</b><br>
+      会社のネットワークには、社外とのHTTPS（暗号化）通信を<b>いったん開封して中身を検査する機器</b>があり、その際、相手（Google/AWS）の証明書を<b>会社独自の証明書（自己署名のルート証明書）に差し替えて</b>通します。
+      <ul class="tight" style="margin-bottom:0">
+        <li><b>ブラウザは普通に見える</b>：会社の証明書をIT部門が事前に「信頼済み」として配布しているため。</li>
+        <li><b>Python（boto3/requests）はエラーになる</b>：会社の証明書を知らず「信頼できない証明書」と判断する（実際テストで <code>CERTIFICATE_VERIFY_FAILED</code> が発生）。</li>
+        <li><b>対策＝プログラムにも会社の証明書を信頼させる</b>：① <code>truststore</code> でOS（Windows）の証明書ストアを使う／② 会社のルート証明書(.pem)を環境変数 <code>AWS_CA_BUNDLE</code>/<code>REQUESTS_CA_BUNDLE</code> 等で指定。</li>
+        <li><b>AWS/Google両方で必要</b>：CloudWatch（AWS）もスプレッドシート（Google）も同じ社内プロキシを通るため。検証を切る(verify=False)のではなく「正しく信頼させる」のが本筋。</li>
+      </ul>
+    </div>
+    <p style="font-size:13px;color:var(--muted)">※既存Phase1のGASが動くのは「Google内部で時間トリガー実行（外部からの着信なし）」だから。本ツールは外部（ローカルPC）からGoogleへ入るため、匿名着信を禁止する組織ポリシーに当たる。</p>
+
+    <h3 id="s5-2"><span class="no">5-2</span>残った候補と方針</h3>
+    <table>
+      <tr><th>案</th><th>GCP</th><th>各自の認証</th><th>状態</th></tr>
+      <tr><td>① 管理者へ匿名公開を申請</td><td>不要</td><td>不要</td><td>不可見込み</td></tr>
+      <tr><td><b>② サービスアカウント（本命）</b></td><td><b>要</b></td><td>不要</td><td>可否を確認したい</td></tr>
+      <tr><td>③ OAuthユーザー</td><td>要</td><td>要</td><td>予備</td></tr>
+      <tr><td>④ AWS中継</td><td>不要</td><td>不要</td><td>最終手段</td></tr>
+    </table>
+    <div class="note"><b>用語解説：GCP（Google Cloud Platform）と「プロジェクト」とは</b><br>
+      GCPはGoogleのクラウドサービスの総称。その中の<b>「プロジェクト」</b>は、プログラムからGoogleの機能(API)を使うための<b>“管理の箱”</b>です。プログラムがGoogleのAPIを使うには、この箱の中で ①プロジェクトを作る → ②使うAPI(Sheets API)を有効化 → ③認証情報を発行、という準備を行います。
+      <div style="margin:8px 0"><b>作成時の最初のページ（GCPコンソール）:</b><br>
+        ・トップ: <a href="https://console.cloud.google.com/" target="_blank" rel="noopener"><code>https://console.cloud.google.com/</code></a><br>
+        ・プロジェクト作成: <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener"><code>https://console.cloud.google.com/projectcreate</code></a>
+      </div>
+      <table style="margin-top:10px">
+        <tr><th>候補</th><th>GCPで何をするか（使い方）</th><th>GCPが要る理由</th></tr>
+        <tr><td><b>② サービスアカウント</b></td><td>プロジェクト作成 → Sheets API有効化 → <b>サービスアカウントを作り鍵(JSON)を発行</b> → 鍵をツールに同梱・シートをSAに共有</td><td>SAの作成と鍵の発行が<b>GCPプロジェクト内の機能</b>だから</td></tr>
+        <tr><td><b>③ OAuthユーザー</b></td><td>プロジェクト作成 → Sheets API有効化 → 同意画面設定 → <b>OAuthクライアントIDを発行</b> → 初回ブラウザ認証</td><td>「このアプリです」と名乗る<b>OAuthクライアントIDの発行</b>がGCP内だから</td></tr>
+      </table>
+      <b>①（GAS Web App）・④（AWS中継）がGCP不要</b>なのは、①はGASがGoogleユーザーとして既存の許可で動くため、④はGoogleの認証情報を使わずAWS経由にするため。
+      <h3 style="margin:14px 0 6px"><span class="no">費用・セキュリティ</span></h3>
+      <table>
+        <tr><th style="width:140px">観点</th><th>内容</th></tr>
+        <tr><td><b>費用（基本）</b></td><td>プロジェクト作成・Sheets/Drive API の利用は<b>無料</b>。請求先（カード）設定も不要。</td></tr>
+        <tr><td><b>有料になるケース</b></td><td>Compute Engine・Cloud Storage・BigQuery・有料API(Maps/Vision 等) など<b>billableなサービスを使った時のみ</b>。Sheets/Drive API は対象外。API上限超過も課金でなく<b>レート制限</b>（増枠申請は無料）。<br>→ <b>この使い方で勝手に課金されることはない</b>（Workspace契約は既存ライセンスで新規費用ではない）。</td></tr>
+        <tr><td><b>セキュリティ：鍵</b></td><td>SA鍵は<b>実質パスワード</b>。漏洩すると共有先シートに第三者がアクセスし得る → 保管・配布範囲の限定・定期ローテーションが必要。</td></tr>
+        <tr><td><b>セキュリティ：権限</b></td><td>付与したスコープ（スプレッドシート）に<b>限定（最小権限）</b>。他データには触れない。OAuthはいつでも取り消し可能。</td></tr>
+        <tr><td><b>セキュリティ：範囲</b></td><td>プロジェクトは組織配下で管理者から可視。同意画面「内部」で<b>社内のみ</b>が対象。<b>AWS側には影響しない</b>。</td></tr>
+      </table>
+    </div>
+
+    <div class="note"><b>補足（次善策の“2の矢・3の矢”）:</b> GCP経由でのローカル→スプレッドシート直接読み書きが難しい場合、<b>一旦ローカルにダウンロードして処理する等の代替手段</b>も検討余地あり（詳細は別途）。</div>
+
+    <div class="danger">
+      <b>会議で確認・決定したいこと:</b>
+      <ul class="tight" style="margin-bottom:0">
+        <li><b>そもそも Google Cloud プロジェクトを作成してよいか</b>（組織で許可されているか）</li>
+        <li><b>サービスアカウントの鍵ファイル作成が許可されるか</b>（②の本命が使えるか）</li>
+        <li>②が不可の場合、③OAuth と ④AWS中継 のどちらで進めるか</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="s6">
+    <h2>6. ログ特定のしくみ（CloudWatch・技術の核）</h2>
+    <p class="lead">B列のアラーム名さえあれば、課金対象の Logs Insights を使わず、AWSのAPIだけで対象ログまで辿れる。これが本ツールの技術的な核。</p>
+
+    <h3 id="s6-1"><span class="no">6-1</span>入力列（A/B/C）の意味</h3>
+    <table>
+      <tr><th>列</th><th>意味</th><th>サンプル</th></tr>
+      <tr><td>A</td><td>タイムゾーン日付（<b>UTC</b>）</td><td><code>2026-05-31 15:38:30</code></td></tr>
+      <tr><td>B</td><td>ALARM（CloudWatchアラーム名）</td><td><code>strike-prd-app-log-errors-alarm</code></td></tr>
+      <tr><td>C</td><td>TIME（<b>JST</b>＝A＋9h）</td><td><code>2026-06-01 0:38:30</code></td></tr>
+    </table>
+
+    <h3 id="s6-2"><span class="no">6-2</span>ログ特定チェーン（Insights 不使用で成立）</h3>
+    <div class="chain">
+B列アラーム名 <span class="n">strike-prd-app-log-errors-alarm</span>
+  └─▶ <span class="c">describe_alarms</span>          … アラームの Namespace / MetricName を取得
+        └─▶ <span class="c">describe_metric_filters</span>  … <span class="g">「ロググループ名 + フィルタパターン」</span>を取得
+              └─▶ <span class="c">filter_log_events</span>      … A列時刻の<span class="g">前後X分</span>で該当イベントを特定
+                    └─▶ <span class="c">get_log_events</span>      … 該当イベントの<span class="g">前後N行</span>を取得（N可変）
+                          └─▶ コンソールの<span class="g">リンク</span>生成 → F列へ
+    </div>
+    <div class="good"><b>ポイント:</b> <code>GetLogEvents</code>/<code>FilterLogEvents</code> はスキャン課金の対象外。よって「Logs Insights（課金）は使わない」要件を満たしつつ、アラームと同じ条件で原因ログを特定できる。</div>
+
+    <h3 id="s6-3"><span class="no">6-3</span>エラー発生源による分岐（張り付ける内容が変わる）</h3>
+    <p>発生源（Lambda / Step Functions / Fargate 等）によって、辿り方も<b>シートに張り付ける内容</b>も変わる。判定キーは<b>アラームのメトリクス種別（Namespace / Dimensions）</b>。<code>describe_alarms</code> の結果で判定し切り替える。</p>
+    <table>
+      <tr><th>メトリクス種別</th><th>主な発生源</th><th>取得経路</th><th>D列（本文）に張り付ける内容</th><th>F列（リンク）</th></tr>
+      <tr><td>ログのメトリクスフィルタ（カスタム）<br><span style="color:var(--muted)">※サンプルの <code>*-log-errors-alarm</code> はこれと推定</span></td><td>Lambda / アプリ(Fargate・EC2)のログ</td><td>describe_metric_filters → ロググループ → filter / get_log_events</td><td>該当ERROR全件＋<b>前後N行</b></td><td>Logsストリーム</td></tr>
+      <tr><td><code>AWS/Lambda</code>（Errors 等のネイティブ）</td><td>Lambda</td><td>Dimension FunctionName → <code>/aws/lambda/{名前}</code> → filter / get_log_events</td><td>該当ERROR全件＋<b>前後N行</b></td><td>Logsストリーム</td></tr>
+      <tr><td><code>AWS/States</code>（ExecutionsFailed 等）</td><td>Step Functions</td><td>Dimension StateMachineArn → Step Functions API（ListExecutions=FAILED → GetExecutionHistory）</td><td><b>失敗ステート＋ error / cause</b>（前後N行より有用）</td><td>SF実行画面</td></tr>
+      <tr><td><code>AWS/ECS</code> 等</td><td>Fargate / ECS</td><td>タスクのロググループ → filter / get_log_events</td><td>該当ERROR＋<b>前後N行</b></td><td>Logsストリーム</td></tr>
+    </table>
+    <div class="note"><b>設計への反映:</b> 取得経路・出力フォーマット・リンク種別を<b>発生源ごとの差し替え可能な部品（ストラテジ）</b>として実装する。特に Step Functions は「行ベースの前後N行」が馴染まないため、<b>失敗ステートと error / cause ＋ 実行画面リンク</b>を主とする。※「前後N行」は Lambda / アプリのような行ベースのログで有効な概念。</div>
+    <div class="danger"><b>注意（チェーン成立の前提）:</b> 採用チェーン（describe_alarms → describe_metric_filters → …）が成立するのは「ログのメトリクスフィルタ」型のみ。<code>AWS/States</code> 等のネイティブメトリクスのアラームでは metric_filters が存在せず、上表の別経路が必要。<b>実際のアラーム種別の網羅確認が前提</b>。</div>
+  </section>
+
+  <!-- 7 -->
+  <section id="s7">
+    <h2>7. 列レイアウト</h2>
+    <p class="lead">出力先の列と役割。運用チームの目視確認しやすさを最優先。</p>
+    <table>
+      <tr><th>列</th><th>用途</th><th>誰が書くか</th></tr>
+      <tr><td>A / B / C</td><td>日付(UTC) / アラーム名 / 日時(JST)</td><td>既存GAS(Phase1)が自動収集</td></tr>
+      <tr><td><b>D</b></td><td><b>ERRORS＝ログ本文</b>（該当なし時は理由を記載）</td><td><b>本ツール</b></td></tr>
+      <tr><td>E</td><td>対応要不要（色付け）</td><td>人／Phase3のAI（ツールは触らない）</td></tr>
+      <tr><td><b>F（新規）</b></td><td><b>ログストリームへのリンク</b></td><td><b>本ツール</b></td></tr>
+    </table>
+    <div class="note"><b>未転記の判定＝D列が空かどうか</b>。該当ログが無い時もDに「該当なし＋理由」を必ず書き、常に非空にして二重抽出を防ぐ。ツールが出すD・Fを見て、人/Phase3がEを判断する流れ。</div>
+  </section>
+
+  <!-- 8 -->
+  <section id="s8">
+    <h2>8. 引き継ぎ・資材構成</h2>
+    <p class="lead">別メンバーが「資材を渡されれば実行できる」ことを目標に構成。GitHub管理は不要。</p>
+    <div class="cols2">
+      <div>
+        <h3 id="s8-1"><span class="no">8-1</span>資材一式</h3>
+        <ul class="tight">
+          <li><code>run.py</code> … メイン処理</li>
+          <li><code>config.yaml</code> … 設定（外出し）</li>
+          <li><code>requirements.txt</code> … 依存パッケージ</li>
+          <li><code>README.md</code> … セットアップ・実行手順</li>
+          <li>Google連携の認証情報（方式により SA鍵 または OAuthトークン）</li>
+          <li>社内CA証明書(.pem)（または truststore）</li>
+        </ul>
+      </div>
+      <div>
+        <h3 id="s8-2"><span class="no">8-2</span>config の主な項目</h3>
+        <ul class="tight">
+          <li>アカウント→スイッチロールARN・MFA・リージョン</li>
+          <li>取得行数 N／時間窓（前後X分）</li>
+          <li>Google連携設定（SA鍵パス・運用フォルダID 等）</li>
+          <li>社内CA証明書のパス</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <aside class="sidenav">
+    <div class="ttl">目次</div>
+    <a class="toclink lvl1" href="#s1">1. 目的・ゴール</a>
+    <a class="toclink lvl1" href="#s2">2. 4レイヤー検討まとめ</a>
+    <a class="toclink lvl2" href="#s2-1">2-1 起動</a>
+    <a class="toclink lvl2" href="#s2-2">2-2 入力/出力</a>
+    <a class="toclink lvl2" href="#s2-3">2-3 情報取得</a>
+    <a class="toclink lvl1" href="#s3">3. 全体処理フロー</a>
+    <a class="toclink lvl1" href="#s4">4. 実現方法の候補</a>
+    <a class="toclink lvl2" href="#s4-1">4-1 GAS Web App（不可）</a>
+    <a class="toclink lvl2" href="#s4-2">4-2 サービスアカウント</a>
+    <a class="toclink lvl2" href="#s4-3">4-3 OAuthユーザー</a>
+    <a class="toclink lvl2" href="#s4-4">4-4 AWS中継</a>
+    <a class="toclink lvl1" href="#s5">5. 検証結果・論点 ★</a>
+    <a class="toclink lvl2" href="#s5-1">5-1 社内制約</a>
+    <a class="toclink lvl2" href="#s5-2">5-2 残った候補と方針</a>
+    <a class="toclink lvl1" href="#s6">6. ログ特定のしくみ</a>
+    <a class="toclink lvl2" href="#s6-1">6-1 入力列の意味</a>
+    <a class="toclink lvl2" href="#s6-2">6-2 特定チェーン</a>
+    <a class="toclink lvl2" href="#s6-3">6-3 発生源による分岐</a>
+    <a class="toclink lvl1" href="#s7">7. 列レイアウト</a>
+    <a class="toclink lvl1" href="#s8">8. 引き継ぎ・資材</a>
+    <a class="toclink lvl2" href="#s8-1">8-1 資材一式</a>
+    <a class="toclink lvl2" href="#s8-2">8-2 config の項目</a>
+  </aside>
+
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toclink'));
+  var targets = Array.prototype.slice.call(document.querySelectorAll('main [id]'));
+  function onScroll(){
+    var current = targets.length ? targets[0].id : null;
+    for(var i=0;i<targets.length;i++){
+      if(targets[i].getBoundingClientRect().top <= 140){ current = targets[i].id; }
+    }
+    for(var j=0;j<links.length;j++){
+      var a = links[j];
+      if(a.getAttribute('href') === '#'+current){ a.classList.add('active'); }
+      else { a.classList.remove('active'); }
+    }
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  document.addEventListener('DOMContentLoaded', onScroll);
+  onScroll();
+})();
+</script>
+
+</body>
+</html>

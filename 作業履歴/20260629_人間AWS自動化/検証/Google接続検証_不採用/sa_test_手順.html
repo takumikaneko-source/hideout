@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サービスアカウント(SA) 接続テスト 手順書</title>
+<style>
+  :root{ --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --accent:#7c3aed; --ok:#16a34a; --ng:#dc2626; --warn:#d97706; --soft:#f8fafc; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Yu Gothic UI","Meiryo",sans-serif;color:var(--ink);background:#eef2f7;line-height:1.75}
+  header.hero{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;padding:40px 32px}
+  header.hero .wrap{max-width:960px;margin:0 auto}
+  header.hero h1{margin:0 0 8px;font-size:26px}
+  header.hero p{margin:4px 0;opacity:.95}
+  .badge-row{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:4px 12px;font-size:13px}
+  nav.toc{position:sticky;top:0;z-index:10;background:#0f172a;color:#cbd5e1;padding:10px 32px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  nav.toc .wrap{max-width:960px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  nav.toc a{color:#cbd5e1;text-decoration:none}
+  nav.toc a:hover{color:#fff;text-decoration:underline}
+  main{max-width:960px;margin:0 auto;padding:8px 32px 80px}
+  section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin:22px 0;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  section h2{margin:0 0 14px;font-size:20px;color:#0f172a;border-left:6px solid var(--accent);padding-left:12px}
+  h3{font-size:15px;margin:18px 0 6px;color:#5b21b6}
+  ol,ul{margin:8px 0;padding-left:24px}
+  li{margin:6px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--soft);color:#334155;font-weight:600}
+  tr:nth-child(even) td{background:#fcfdff}
+  code{background:#f3e8ff;color:#6b21a8;border-radius:5px;padding:1px 6px;font-family:"Consolas",monospace;font-size:13px}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow-x:auto;font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.6}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid var(--warn);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .good{background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid var(--ok);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .danger{background:#fef2f2;border:1px solid #fecaca;border-left:5px solid var(--ng);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700}
+  .pill.ok{background:#dcfce7;color:var(--ok)}
+  .pill.ng{background:#fee2e2;color:var(--ng)}
+  .step-num{display:inline-block;background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:700;margin-right:6px}
+  footer{max-width:960px;margin:0 auto;padding:20px 32px 60px;color:var(--muted);font-size:13px}
+  @media print{nav.toc{display:none}body{background:#fff}section{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>サービスアカウント(SA) 接続テスト 手順書</h1>
+    <p>「SA方式（各自認証なしでシート読み書き）が、この組織で使えるか」を手元で検証する</p>
+    <div class="badge-row">
+      <span class="badge">所要: 15分</span>
+      <span class="badge">2つの関門: ①SA鍵を作れるか ②SAでシート読み書きできるか</span>
+      <span class="badge">関連: sa_test_client.py</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#purpose">目的</a>
+    <a href="#s0">0. 事前準備</a>
+    <a href="#s1">1. プロジェクト/API</a>
+    <a href="#s2">2. SA作成・鍵</a>
+    <a href="#s3">3. シート共有</a>
+    <a href="#s4">4. 実行</a>
+    <a href="#s5">5. 結果の見方</a>
+  </div>
+</nav>
+
+<main>
+
+  <section id="purpose">
+    <h2>目的</h2>
+    <p>匿名Web Appが使えないと分かったため、代替の<b>サービスアカウント方式</b>が成立するかを確認する。確認すべき関門は2つ：</p>
+    <ol>
+      <li><b>SA鍵(JSON)を作成できるか</b>（組織が <code>サービスアカウント鍵の作成</code> を禁止していないか）</li>
+      <li><b>そのSAでスプレッドシートを読み書きできるか</b></li>
+    </ol>
+    <div class="good">このテストは <b>Googleのみ</b> を扱い、AWSの資格情報は使いません。実行・鍵の取り扱いはすべてあなたの環境で完結します（結果は「成功／どこで詰まったか」だけ共有すれば十分）。</div>
+    <div class="note"><b>推奨:</b> 本番ファイルではなく、<b>テスト用の新規スプレッドシート</b>で試す。</div>
+  </section>
+
+  <section id="s0">
+    <h2><span class="step-num">0</span>事前準備</h2>
+    <pre>pip install gspread google-auth truststore</pre>
+    <p><code>truststore</code> は社内SSL検査(プロキシ)対策です（OSの証明書ストアを使用）。</p>
+  </section>
+
+  <section id="s1">
+    <h2><span class="step-num">1</span>プロジェクトとAPI有効化</h2>
+    <ol>
+      <li><a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> に会社アカウントでアクセス</li>
+      <li>プロジェクトを新規作成（例: <code>sa-test</code>）。<span style="color:var(--ng)">作成できない場合は組織制限の可能性 → メモして報告</span></li>
+      <li><b>APIとサービス → ライブラリ</b> で <b>Google Sheets API</b> と <b>Google Drive API</b> を有効化</li>
+    </ol>
+  </section>
+
+  <section id="s2">
+    <h2><span class="step-num">2</span>サービスアカウント作成と鍵のダウンロード ★関門①</h2>
+    <ol>
+      <li><b>IAMと管理 → サービスアカウント → サービスアカウントを作成</b>（名前は任意、例 <code>sheet-writer</code>）。ロール付与は不要（シートアクセスは「共有」で行うため）。完了。</li>
+      <li>作成したSAを開く → <b>キー → 鍵を追加 → 新しい鍵を作成 → JSON</b> → ダウンロード</li>
+      <li>ダウンロードしたJSONを <b><code>sa_key.json</code></b> にリネームし、<code>sa_test_client.py</code> と同じフォルダに置く</li>
+    </ol>
+    <div class="danger"><b>★関門①の判定:</b> 「鍵を追加」で <b>「組織のポリシーによりブロックされました」「サービスアカウントキーの作成は無効」</b> 等が出たら、組織がSA鍵を禁止しています＝<b>SA方式はNG</b>。その旨をメモして報告してください（→ 最終手段の構成へ）。</div>
+    <p>SAのメールアドレス（共有先）は <code>xxxx@&lt;project&gt;.iam.gserviceaccount.com</code> の形です（鍵JSONの <code>client_email</code>、またはSA一覧で確認）。</p>
+  </section>
+
+  <section id="s3">
+    <h2><span class="step-num">3</span>テストシートをSAに共有 ★関門②の準備</h2>
+    <ol>
+      <li>テスト用の空スプレッドシートを新規作成（<a href="https://sheets.new" target="_blank" rel="noopener">https://sheets.new</a>）</li>
+      <li>右上 <b>共有</b> → SAのメール（<code>...iam.gserviceaccount.com</code>）を入力し <b>編集者</b> で共有</li>
+      <li>そのシートのURLから <b>ID</b>（<code>/d/<b>ここ</b>/edit</code>）を控える</li>
+    </ol>
+    <div class="note"><b>本番の共有ドライブで試す場合:</b> 共有ドライブのメンバーにSAのメールを追加（コンテンツ管理者/投稿者）すれば、配下ファイルにアクセスできます。まずは上記の単独シートで関門②を判定するのが簡単です。</div>
+  </section>
+
+  <section id="s4">
+    <h2><span class="step-num">4</span>スクリプト設定 &amp; 実行</h2>
+    <pre>KEY_FILE   = "sa_key.json"
+SHEET_ID   = "（控えたID）"
+ALLOW_WRITE = True
+CA_BUNDLE  = ""   # 社内CA(.pem)があればパス。無ければ truststore が使われる</pre>
+    <pre>python sa_test_client.py</pre>
+  </section>
+
+  <section id="s5">
+    <h2><span class="step-num">5</span>結果の見方</h2>
+    <table>
+      <tr><th>表示</th><th>意味</th><th>判定/対処</th></tr>
+      <tr><td><code>[1] 読み取り成功</code> ＋ <code>[2] 書き込み結果: sa_write_ok</code></td><td>SAでの読み書き<b>成功</b></td><td><span class="pill ok">SA方式で本実装に進める</span></td></tr>
+      <tr><td>鍵作成が「ポリシーによりブロック」</td><td>組織がSA鍵を<b>禁止</b></td><td><span class="pill ng">SA方式NG → 最終手段へ</span></td></tr>
+      <tr><td><code>シートを開けません … PermissionError(403)</code></td><td>SAにシートが共有されていない</td><td>手順3でSAメールに編集者共有 → 再実行</td></tr>
+      <tr><td><code>Sheets API has not been used/enabled</code></td><td>API有効化漏れ</td><td>手順1でSheets/Drive APIを有効化</td></tr>
+      <tr><td><code>SSL: CERTIFICATE_VERIFY_FAILED</code></td><td>社内プロキシのCA未信頼</td><td><code>pip install truststore</code>、または <code>CA_BUNDLE</code> に社内CA(.pem)を指定</td></tr>
+    </table>
+    <div class="good"><b>このテストで分かること:</b> ①SA鍵が作れるか ②SAでシート読み書きできるか。両方OKなら、各自認証なしの引き継ぎやすい構成が確定します。</div>
+  </section>
+
+</main>
+
+<footer>
+  サービスアカウント(SA) 接続テスト 手順書（関連: sa_test_client.py / 設計たたき台HTML）。本テストはGoogleのみを対象とし、AWSの資格情報は扱いません。
+</footer>
+
+</body>
+</html>

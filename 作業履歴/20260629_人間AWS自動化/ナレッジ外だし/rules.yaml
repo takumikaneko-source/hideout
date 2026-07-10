@@ -1,0 +1,61 @@
+# 機械判定ルール（AI不使用）
+#
+# 上から順に照合し、最初に一致したルールの then をそのまま結論として出力する。
+# どのルールにも一致しなければ AI 判定へ回す（fallthrough）。
+# ここに書くのは「ログから確定的に結論が出せる・何度も出るパターン」だけ。
+# 「リトライ成功を確認する」等、状態確認や判断が要るものは guidelines.md に委ね、ここには書かない。
+# 出典: 運用作業手順.xlsx「備忘：ERROR対応例、lambdaの設定確認方法」ほか。
+#
+# 照合条件（when）に使える指定:
+#   alarm_name_prefix / alarm_name_equals : アラーム名の前方一致 / 完全一致
+#   service / env / source_type / namespace
+#   log_contains_any / log_contains_all   : 文字列を含む（配列）
+#   log_regex                             : 正規表現に一致
+# 複数条件は AND。
+
+rules:
+  # --- 緊急（高額請求リスク）: 最優先で拾う ---
+  - name: ympf-sync連続発報_高額請求リスク
+    when:
+      log_contains_any: ["strike-prd-ympf-sync-function"]
+    then:
+      impact: 大
+      action: 要
+      reason: バッチがエラーを出し続け高額請求の恐れ。速やかに関係部署へ報告し、原則本処理を停止して再開する（連続発報かを必ず確認）
+    note: 単発か連続発報かは要目視。連続発報時は緊急。
+
+  # --- 照会・取り込みの省略が確定しているもの ---
+  - name: テスト乗務員コード999999_取り込み不要
+    when:
+      # 数値の偶然一致（ID・タイムスタンプ等に含まれる999999）を避けるため、
+      # 乗務員コードの文脈か、ファイル名の区切り（_999999_ / _00999999_）に限定する
+      log_regex: "乗務員コード[^0-9]{0,10}0{0,2}999999|_0{0,2}999999_"
+    then:
+      impact: 小
+      action: 不要
+      reason: テスト乗務員コード（999999）。2026.06時点で取り込み不要・顧客照会省略可
+    note: 解析後jsonファイル名は 会社(8)_営業所(8)_乗務員コード(8or6)_... の形式。適用時も文脈を確認。
+
+  - name: メーター初期値2016年_照会省略可
+    when:
+      # 出庫日時の文脈、またはファイル名中の出庫日(_2016MMDD)に限定する
+      log_regex: "出庫日[^0-9]{0,10}2016|_2016(0[1-9]|1[0-2])[0-3][0-9]"
+    then:
+      impact: 小
+      action: 不要
+      reason: 出庫日時が2016年（メーター初期値）。顧客照会を省略可
+    note: 解析後json/運行データのファイル名で判断可能。
+
+  # --- 分類の手掛かり（最終判定は状態確認が要るため action は保留＝AIへ回す想定の補助タグ） ---
+  # メモリ不足・タイムアウト・ICCID重複などは「検知はできるが静観可否はデータ確認次第」。
+  # これらは rules.yaml で断定せず、guidelines.md の該当ケースでAIに判定させる。
+  # 参考の検知キーワード（rules化しない）:
+  #   OOM        : "signal: killed", "OutOfMemory"
+  #   timeout    : "timeout"
+  #   ICCID重複  : "MultipleResultsFound"
+  #   マスタ欠損 : "選択された目標設定のデータがマスタに存在しません"
+
+# fallthrough: どのルールにも一致しない場合の既定動作
+fallthrough:
+  action: AI判定へ回す
+  note: rules.yaml で断定できないものは cases.jsonl + guidelines.md + system_context.md を用いてAIが判定する

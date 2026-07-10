@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OAuthユーザー認証 接続テスト 手順書</title>
+<style>
+  :root{ --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --accent:#2563eb; --ok:#16a34a; --ng:#dc2626; --warn:#d97706; --soft:#f8fafc; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Yu Gothic UI","Meiryo",sans-serif;color:var(--ink);background:#eef2f7;line-height:1.75}
+  header.hero{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:40px 32px}
+  header.hero .wrap{max-width:960px;margin:0 auto}
+  header.hero h1{margin:0 0 8px;font-size:26px}
+  header.hero p{margin:4px 0;opacity:.95}
+  .badge-row{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:4px 12px;font-size:13px}
+  nav.toc{position:sticky;top:0;z-index:10;background:#0f172a;color:#cbd5e1;padding:10px 32px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  nav.toc .wrap{max-width:960px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  nav.toc a{color:#cbd5e1;text-decoration:none}
+  nav.toc a:hover{color:#fff;text-decoration:underline}
+  main{max-width:960px;margin:0 auto;padding:8px 32px 80px}
+  section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin:22px 0;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  section h2{margin:0 0 14px;font-size:20px;color:#0f172a;border-left:6px solid var(--accent);padding-left:12px}
+  h3{font-size:15px;margin:18px 0 6px;color:#1e3a8a}
+  ol,ul{margin:8px 0;padding-left:24px}
+  li{margin:6px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--soft);color:#334155;font-weight:600}
+  tr:nth-child(even) td{background:#fcfdff}
+  code{background:#eef2ff;color:#3730a3;border-radius:5px;padding:1px 6px;font-family:"Consolas",monospace;font-size:13px}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow-x:auto;font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.6}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid var(--warn);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .good{background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid var(--ok);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .danger{background:#fef2f2;border:1px solid #fecaca;border-left:5px solid var(--ng);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700}
+  .pill.ok{background:#dcfce7;color:var(--ok)}
+  .pill.ng{background:#fee2e2;color:var(--ng)}
+  .step-num{display:inline-block;background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:700;margin-right:6px}
+  footer{max-width:960px;margin:0 auto;padding:20px 32px 60px;color:var(--muted);font-size:13px}
+  @media print{nav.toc{display:none}body{background:#fff}section{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>OAuthユーザー認証 接続テスト 手順書</h1>
+    <p>「自分（ログインユーザー）として OAuth 認証し、スプレッドシートを読み書きできるか」を手元で検証する</p>
+    <div class="badge-row">
+      <span class="badge">所要: 15分</span>
+      <span class="badge">2つの関門: ①OAuth許可（組織ポリシー） ②シート読み書き</span>
+      <span class="badge">関連: oauth_test.py</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#purpose">目的</a>
+    <a href="#s0">0. 事前準備</a>
+    <a href="#s1">1. プロジェクト/API</a>
+    <a href="#s2">2. OAuthクライアント発行</a>
+    <a href="#s3">3. テストシートID</a>
+    <a href="#s4">4. 実行</a>
+    <a href="#s5">5. 結果の見方</a>
+  </div>
+</nav>
+
+<main>
+
+  <section id="purpose">
+    <h2>目的</h2>
+    <p>サービスアカウントが使えない場合の代替「OAuthユーザー認証」が、この組織で成立するかを確認する。関門は2つ：</p>
+    <ol>
+      <li><b>OAuthクライアントを発行でき、同意画面で「許可」できるか</b>（組織が自作アプリのOAuth接続を許すか）</li>
+      <li><b>そのまま自分の権限でスプレッドシートを読み書きできるか</b></li>
+    </ol>
+    <div class="good">このテストは <b>Googleのみ</b> を扱い、AWSの資格情報は使いません。実行・認証はすべてあなたの環境で完結します（結果は「成功／どこで詰まったか」だけ共有すれば十分）。</div>
+    <div class="note"><b>SA方式との違い:</b> OAuthは<b>あなた自身として</b>動くため、シートを誰かに共有する操作は不要（あなたが見えるシートならそのまま読み書き可）。一方、<b>使う人ごとに初回のブラウザ認証</b>が要ります。</div>
+  </section>
+
+  <section id="s0">
+    <h2><span class="step-num">0</span>事前準備</h2>
+    <pre>pip install gspread google-auth google-auth-oauthlib truststore</pre>
+    <p><code>truststore</code> は社内SSL検査(プロキシ)対策です（OSの証明書ストアを使用）。</p>
+  </section>
+
+  <section id="s1">
+    <h2><span class="step-num">1</span>プロジェクトとAPI有効化</h2>
+    <ol>
+      <li><a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> に会社アカウントでアクセス</li>
+      <li>プロジェクトを新規作成（例: <code>oauth-test</code>）。<span style="color:var(--ng)">作成できない場合は組織制限の可能性 → メモして報告</span></li>
+      <li><b>APIとサービス → ライブラリ</b> で <b>Google Sheets API</b> と <b>Google Drive API</b> を有効化</li>
+    </ol>
+  </section>
+
+  <section id="s2">
+    <h2><span class="step-num">2</span>OAuthクライアントを発行 ★関門①</h2>
+    <ol>
+      <li><b>APIとサービス → OAuth同意画面</b>:
+        <ul>
+          <li>User Type は <b>内部(Internal)</b> を選択（組織内のみで使う）→ アプリ名・サポートメール等を入力して保存</li>
+          <li>「内部」が選べず「外部」しか無い場合は、外部で作成し「テストユーザー」に<b>自分のメール</b>を追加</li>
+        </ul>
+      </li>
+      <li><b>APIとサービス → 認証情報 → 認証情報を作成 → OAuthクライアントID</b>:
+        <ul>
+          <li>アプリの種類: <b>デスクトップアプリ</b> → 作成</li>
+          <li>表示されたダイアログで <b>JSONをダウンロード</b></li>
+        </ul>
+      </li>
+      <li>ダウンロードしたJSONを <b><code>credentials.json</code></b> にリネームし、<code>oauth_test.py</code> と同じフォルダに置く</li>
+    </ol>
+    <div class="danger"><b>★関門①の判定:</b> 後の実行(手順4)でブラウザに <b>「アクセスをブロックしました」「管理者の承認が必要」</b> 等が出て先へ進めない場合、組織が自作アプリのOAuth接続を制限しています＝<b>OAuth方式はNG</b>。その旨をメモして報告してください（→ ④AWS中継 等の検討へ）。</div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="step-num">3</span>テストシートのIDを用意</h2>
+    <p>スプレッドシートを開いたときのURL <code>https://docs.google.com/spreadsheets/d/<b>★ここがID★</b>/edit</code> の <code>★</code> 部分を控える。</p>
+    <ul>
+      <li><b>書き込みまで試す（推奨）:</b> 本番を汚さないため、<b>あなたが見える場所に空のスプレッドシートを新規作成</b>（例 <code>oauth_test_dummy</code>）し、そのIDを使う。</li>
+      <li>OAuthは「あなた自身」として動くので、<b>共有設定は不要</b>（あなたが開けるシートならアクセス可）。</li>
+    </ul>
+  </section>
+
+  <section id="s4">
+    <h2><span class="step-num">4</span>スクリプト設定 &amp; 実行</h2>
+    <pre>CREDENTIALS_FILE = "credentials.json"
+SHEET_ID         = "（控えたID）"
+ALLOW_WRITE      = True
+CA_BUNDLE        = ""   # 社内CA(.pem)があればパス。無ければ truststore が使われる</pre>
+    <pre>python oauth_test.py</pre>
+    <ul>
+      <li>初回は<b>ブラウザが開く</b> → 会社アカウントでログイン → <b>「許可」</b></li>
+      <li>2回目以降は <code>token.json</code> が使われ、ブラウザは開きません。</li>
+    </ul>
+  </section>
+
+  <section id="s5">
+    <h2><span class="step-num">5</span>結果の見方</h2>
+    <table>
+      <tr><th>表示</th><th>意味</th><th>判定/対処</th></tr>
+      <tr><td><code>[1] -&gt; 認証OK</code></td><td>組織のOAuthアプリ接続は<b>許可されている</b></td><td><span class="pill ok">関門①クリア</span></td></tr>
+      <tr><td><code>[2] 読み取り成功</code> ＋ <code>[3] 書き込み結果: oauth_write_ok</code></td><td>OAuthでの読み書き<b>成功</b></td><td><span class="pill ok">OAuth方式で進める</span></td></tr>
+      <tr><td>ブラウザで「アクセスをブロック」「管理者の承認が必要」</td><td>組織がOAuthアプリを<b>制限</b></td><td><span class="pill ng">OAuth方式NG → 代替へ</span></td></tr>
+      <tr><td><code>シートを開けません … PermissionError(403)</code></td><td>シートにアクセス権がない / API未有効</td><td>自分が開けるシートのIDか／Sheets API有効化を確認</td></tr>
+      <tr><td><code>SSL: CERTIFICATE_VERIFY_FAILED</code></td><td>社内プロキシのCA未信頼</td><td><code>pip install truststore</code>、または <code>CA_BUNDLE</code> に社内CA(.pem)を指定</td></tr>
+    </table>
+    <div class="good"><b>このテストで分かること:</b> ①組織がOAuthアプリ接続を許すか ②自分の権限でシート読み書きできるか。両方OKなら、OAuth方式（各自が初回だけブラウザ認証）で進められる。</div>
+  </section>
+
+</main>
+
+<footer>
+  OAuthユーザー認証 接続テスト 手順書（関連: oauth_test.py / sa_test_手順.html / 設計たたき台HTML）。本テストはGoogleのみを対象とし、AWSの資格情報は扱いません。
+</footer>
+
+</body>
+</html>

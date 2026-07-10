@@ -1,0 +1,15 @@
+# 生データ（個人名・顧客情報・実アラートデータを含むためコミットしない）
+Backlog集計/抽出結果ファイル/
+Backlog集計/backlog_issues*.csv
+資料/*.xlsx
+検証/ログ取得検証/*.xlsx
+配布_ログ収集ツール/INPUT/
+配布_ログ収集ツール/OUTPUT/
+~$*.xlsx
+**/__pycache__/
+
+# APIキー直書きのためコミットしない（環境変数化したら解除する）
+Backlog集計/backlog_collect.py
+
+# ナレッジ外だしの成果物（cases.jsonl/guidelines.md/rules.yaml/system_context.md）は
+# サニタイズ済みのためコミット対象とする（ここでは無視しない）

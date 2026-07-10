@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ログ収集ツール 運用手順</title>
+<style>
+  :root{ --ink:#1e293b; --muted:#64748b; --line:#e2e8f0; --accent:#0d9488; --ok:#16a34a; --ng:#dc2626; --warn:#d97706; --soft:#f8fafc; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI","Yu Gothic UI","Meiryo",sans-serif;color:var(--ink);background:#eef2f7;line-height:1.75}
+  header.hero{background:linear-gradient(135deg,#0f766e,#0891b2);color:#fff;padding:40px 32px}
+  header.hero .wrap{max-width:980px;margin:0 auto}
+  header.hero h1{margin:0 0 8px;font-size:25px}
+  header.hero p{margin:4px 0;opacity:.95}
+  .badge-row{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:4px 12px;font-size:13px}
+  nav.toc{position:sticky;top:0;z-index:10;background:#0f172a;color:#cbd5e1;padding:10px 32px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  nav.toc .wrap{max-width:980px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  nav.toc a{color:#cbd5e1;text-decoration:none}
+  nav.toc a:hover{color:#fff;text-decoration:underline}
+  main{max-width:980px;margin:0 auto;padding:8px 32px 80px}
+  section{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px 26px;margin:22px 0;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  section h2{margin:0 0 14px;font-size:20px;color:#0f172a;border-left:6px solid var(--accent);padding-left:12px}
+  h3{font-size:15px;margin:18px 0 6px;color:#0f766e}
+  ol,ul{margin:8px 0;padding-left:24px}
+  li{margin:6px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:var(--soft);color:#334155;font-weight:600}
+  tr:nth-child(even) td{background:#fcfdff}
+  code{background:#f0fdfa;color:#0f766e;border-radius:5px;padding:1px 6px;font-family:"Consolas",monospace;font-size:13px}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;overflow-x:auto;font-family:"Consolas","Courier New",monospace;font-size:13px;line-height:1.6}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid var(--warn);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .good{background:#f0fdf4;border:1px solid #bbf7d0;border-left:5px solid var(--ok);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .danger{background:#fef2f2;border:1px solid #fecaca;border-left:5px solid var(--ng);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .pill{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700}
+  .pill.ok{background:#dcfce7;color:var(--ok)}
+  .pill.ng{background:#fee2e2;color:var(--ng)}
+  .step-num{display:inline-block;background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-weight:700;margin-right:6px}
+  footer{max-width:980px;margin:0 auto;padding:20px 32px 60px;color:var(--muted);font-size:13px}
+  @media print{nav.toc{display:none}body{background:#fff}section{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>ログ収集ツール 運用手順</h1>
+    <p>DLした .xlsx の未処理行（D列が空）→ CloudWatch ログ取得 → コピーの D/F 列へ転記 → 該当セルをスプレッドシートへ貼り付け</p>
+    <div class="badge-row">
+      <span class="badge">実行は手元（AWS認証は各自の環境・MFA）</span>
+      <span class="badge">AI不使用</span>
+      <span class="badge">スクリプト: verify_pull_logs.py</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#purpose">目的</a>
+    <a href="#s0">0. 事前準備</a>
+    <a href="#s1">1. 入力の用意</a>
+    <a href="#s2">2. AWSの前提</a>
+    <a href="#s3">3. 設定値</a>
+    <a href="#s4">4. 実行</a>
+    <a href="#s5">5. 結果の見方</a>
+    <a href="#s6">6. 貼り付け</a>
+    <a href="#s7">7. 取得できなかった場合</a>
+    <a href="#s8">8. 費用</a>
+    <a href="#s9">9. 既知の制約</a>
+  </div>
+</nav>
+
+<main>
+
+  <section id="purpose">
+    <h2>目的</h2>
+    <p>ダウンロードした .xlsx の<b>未処理行（D列が空）</b>について、A列の日時・B列のアラーム名から <b>CloudWatch のログを取得</b>し、入力ファイルの<b>コピー</b>に対して D列（ログ本文）と F列（コンソールへのリンク）を書き込む。運用担当は、その D/F セルを本物のスプレッドシートの該当行へ貼り付ける。</p>
+    <div class="good">出力は入力ファイルのコピー <code>（入力名）_転記済.xlsx</code>。同じシートの D列・F列に結果が入る。中身を確認し、該当行の D/F セルだけをスプレッドシートへ貼り付ける運用。</div>
+    <div class="note">AWSの資格情報はスクリプトからは読み書きしません。boto3 が実行時に各自の <code>~/.aws</code> を参照し、MFA はターミナルで入力を求められます。ログの判定にAIは使いません（AIを使うのは別ツール）。</div>
+  </section>
+
+  <section id="s0">
+    <h2><span class="step-num">0</span>事前準備（1回だけ）</h2>
+    <pre>pip install boto3 openpyxl truststore</pre>
+    <p><code>truststore</code> は社内SSL検査（プロキシ）対策で、AWS通信の証明書エラーを回避します。効かない場合は設定の <code>CA_BUNDLE</code> に社内CA(.pem)のパスを指定してください。</p>
+  </section>
+
+  <section id="s1">
+    <h2><span class="step-num">1</span>入力の用意（.xlsx ダウンロード）</h2>
+    <ol>
+      <li>対象スプレッドシートを開く → <b>ファイル → ダウンロード → Microsoft Excel(.xlsx)</b></li>
+      <li>保存した .xlsx のパスを、スクリプトの <code>INPUT_XLSX</code> に設定</li>
+    </ol>
+    <div class="note">シートは実行年月(JST)から <code>YYYY-MM</code> を自動選択します。別の月を処理するなら <code>SHEET_NAME="2026-06"</code> のように明示してください。</div>
+  </section>
+
+  <section id="s2">
+    <h2><span class="step-num">2</span>AWSの前提（スイッチロール・権限）</h2>
+    <ul>
+      <li><b>プロファイル:</b> <code>~/.aws/config</code> に、各環境のロールへスイッチするプロファイルがあること（<code>role_arn</code> / <code>source_profile</code> / <code>mfa_serial</code>）。</li>
+      <li><b>マッピング:</b> スクリプトの <code>PREFIX_TO_PROFILE</code> に「アラーム接頭辞 → プロファイル名」を設定（例 <code>"strike": "yzk-strike-stg"</code>）。無い接頭辞は <code>DEFAULT_PROFILE</code> を使用。</li>
+      <li><b>リージョン:</b> <code>REGION</code>（既定 <code>ap-northeast-1</code>）。</li>
+      <li><b>必要なIAM権限（対象ロール）:</b> <code>cloudwatch:DescribeAlarms</code> / <code>logs:DescribeMetricFilters</code> / <code>logs:FilterLogEvents</code> / <code>logs:GetLogEvents</code>。</li>
+    </ul>
+    <div class="note"><b>MFAはアカウントごとに1回</b>求められます。ワンタイムコードは使い回せないため、複数アカウントを処理する回では、プロンプトごとに<b>新しいコード</b>を入力してください。まず1アカウント・1プロファイルで <code>MAX_ROWS=3</code> にして試すのが安全です。</div>
+  </section>
+
+  <section id="s3">
+    <h2><span class="step-num">3</span>設定値（スクリプト上部）</h2>
+    <pre>INPUT_XLSX   = "（DLした.xlsxのパス）"
+SHEET_NAME   = ""            # "" で当月自動 / 例 "2026-06"
+OUTPUT_XLSX  = ""            # "" で 入力名+"_転記済.xlsx"
+REGION       = "ap-northeast-1"
+LINES_BEFORE = 100           # 該当行の前 何行
+LINES_AFTER  = 100           # 該当行の後 何行
+WINDOW_MIN   = 5             # A時刻の前後 何分を検索するか
+MAX_ROWS     = 0             # 0=制限なし(運用) / 動作確認は 3 等
+PREFIX_TO_PROFILE = { "strike": "yzk-strike-stg", ... }
+DEFAULT_PROFILE   = ""       # 上記に無い時（""=既定資格情報）
+CA_BUNDLE    = ""            # 社内CA(.pem) 任意</pre>
+    <table>
+      <tr><th>設定</th><th>運用での目安</th></tr>
+      <tr><td><code>MAX_ROWS</code></td><td><b>0（制限なし）</b>で空き行をすべて処理。件数を絞って試すときだけ 3 等にする。</td></tr>
+      <tr><td><code>LINES_BEFORE / AFTER</code></td><td>各100（前後で計200行）。長くて読みにくければ 50/50 程度へ。極端に長いログはセル上限で切られ、全文は F列リンクで見られる。</td></tr>
+      <tr><td><code>WINDOW_MIN</code></td><td>±5分。「該当ログなし」が多い場合は 10〜15 に広げる。</td></tr>
+      <tr><td><code>PREFIX_TO_PROFILE</code></td><td>アラーム名の先頭（例 <code>strike-…</code> の <code>strike</code>）と、その環境のプロファイル名を対応させる。</td></tr>
+    </table>
+  </section>
+
+  <section id="s4">
+    <h2><span class="step-num">4</span>実行</h2>
+    <pre>python verify_pull_logs.py</pre>
+    <ul>
+      <li>対象プロファイルのロール引き受けで <b>MFAコードの入力</b>を求められます。</li>
+      <li>進捗が行ごとに表示され、最後に <code>（入力名）_転記済.xlsx</code> が生成されます。</li>
+      <li>末尾に集計が出ます: <code>転記OK / 該当ログなし / 取得できず・要確認 / 要再実行(D空)</code>。</li>
+    </ul>
+  </section>
+
+  <section id="s5">
+    <h2><span class="step-num">5</span>結果の見方（コピーの D列の状態）</h2>
+    <p>処理した行は、D列の中身で状態が分かります。</p>
+    <table>
+      <tr><th>D列の中身</th><th>意味</th><th>対応</th></tr>
+      <tr><td>ログ本文が入っている <span class="pill ok">OK</span></td><td>ロググループを特定し、前後N行を取得できた。F列にコンソールへのリンク。</td><td>D/F を該当行へ貼り付け（6章）。</td></tr>
+      <tr><td>「【該当ログなし】…」</td><td>ロググループは特定できたが、時間窓に一致するログがなかった。</td><td>必要なら D を空にし <code>WINDOW_MIN</code> を広げて再取得。</td></tr>
+      <tr><td>「【取得できず】…」 <span class="pill ng">要確認</span></td><td>未対応の種類（Step Functions 等）・アラーム未検出・日時が不正 など。再実行しても変わらない。</td><td>理由を確認し手動対応（7章）。</td></tr>
+      <tr><td><b>D列が空のまま</b></td><td>AWS通信・認証などの<b>一時的なエラー</b>。この行は処理されていない。</td><td><b>もう一度実行</b>すれば再取得します。</td></tr>
+    </table>
+    <div class="note">「D列が空＝未処理」です。だから一時エラーの行はあえて空のままにして、次回の実行で拾えるようにしています。</div>
+  </section>
+
+  <section id="s6">
+    <h2><span class="step-num">6</span>スプレッドシートへ貼り付け</h2>
+    <ol>
+      <li>出力ファイル（<code>…_転記済.xlsx</code>）を開き、D列に結果が入った行を確認する。</li>
+      <li>本物のスプレッドシートの<b>同じ行</b>の <b>D列・F列だけ</b>を、出力ファイルの値で更新する。</li>
+    </ol>
+    <div class="danger"><b>ファイルを丸ごとアップロード（差し替え）しないでください。</b>ダウンロード〜貼り付けの間にも自動収集（Phase1）が新しい行を追記しているため、丸ごと差し替えると追記分が消えます。<b>D/F セルの貼り付けだけ</b>にしてください。</div>
+  </section>
+
+  <section id="s7">
+    <h2><span class="step-num">7</span>ログが取得できなかった場合</h2>
+    <table>
+      <tr><th>ケース</th><th>D列</th><th>対応</th></tr>
+      <tr><td>一時的なエラー（AWS通信・認証・MFA）</td><td>空のまま</td><td>もう一度実行する。D空なので自動で再取得。</td></tr>
+      <tr><td>該当ログなし（窓内に一致なし）</td><td>【該当ログなし】</td><td>ログ未出力の可能性。必要なら D を空にし <code>WINDOW_MIN</code> を広げて再実行。</td></tr>
+      <tr><td>Step Functions のアラーム</td><td>【取得できず】未対応の旨</td><td>本ツールは未対応。実行画面を手動で確認。</td></tr>
+      <tr><td>アラームが見つからない</td><td>【取得できず】未検出の旨</td><td>アラーム名・対象アカウント/プロファイルの対応を確認。</td></tr>
+      <tr><td>A列の日時が不正</td><td>【取得できず】日時解釈不可</td><td>元の行の日時を確認。</td></tr>
+    </table>
+    <div class="good">原因を直して<b>もう一度取得したい</b>ときは、その行の<b>D列を空にして</b>実行すると、未処理行として再取得します。</div>
+  </section>
+
+  <section id="s8">
+    <h2><span class="step-num">8</span>費用（AWSからのログ取得）</h2>
+    <p>このツールがAWSへ投げるのは、アラーム情報とロググループの特定、ログの取得だけです。使うAPIと費用は次のとおり。</p>
+    <table>
+      <tr><th>API</th><th>種類</th><th>費用</th></tr>
+      <tr><td><code>describe_alarms</code></td><td>CloudWatch</td><td>APIリクエスト課金（$0.01 / 1,000件）だが、<b>月100万件まで無料</b>。本件数では実質無料。</td></tr>
+      <tr><td><code>describe_metric_filters</code><br><code>filter_log_events</code><br><code>get_log_events</code></td><td>CloudWatch Logs</td><td>これらの取得APIには、公式にリクエスト単価・GB単価の記載が<b>ない</b>。Logsの課金は「取り込み・保存・Logs Insights（GBスキャン）」で構成される。</td></tr>
+    </table>
+    <div class="good"><b>結論: AWSからのログ取得費用は、現状の件数では実質ほぼ0円。</b>課金対象の <b>Logs Insights を使わない</b>設計にしていることが効いている。ログの取り込み・保存費用はアプリ側で既に発生している既存費用で、本ツールは読むだけなので追加は発生しない。</div>
+    <p style="font-size:12px;color:#64748b">概算: 1日30件 × 20営業日 × 1行あたり最大4API ≈ 月2,400回。CloudWatchの無料枠（月100万リクエスト）に対して極小。<br>※ 判定AI（Claude）側の費用は別（「ナレッジ外だし 設計たたき台」10章）。<br>出典: <a href="https://aws.amazon.com/cloudwatch/pricing/">Amazon CloudWatch Pricing</a> ／ <a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/LogsBillingDetails.html">CloudWatch Logs billing</a></p>
+  </section>
+
+  <section id="s9">
+    <h2><span class="step-num">9</span>既知の制約</h2>
+    <ul>
+      <li><b>対応する種類:</b> ログのメトリクスフィルタ型を主に自動対応。<code>AWS/Lambda</code> ネイティブも簡易対応。<b><code>AWS/States</code>（Step Functions）は未対応</b>（実行履歴の取得は別途必要）。該当行は D に「【取得できず】」を記録するので、手動確認してください。</li>
+      <li><b>コンソールのリンク:</b> 一般的な方式で生成。環境により開けない場合は、ロググループ／ストリーム名で手動遷移してください。</li>
+      <li><b>複数該当:</b> 窓内に複数のエラーがある場合、最初の該当を基点に前後N行を取得します（全件列挙は今後の拡張）。</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  運用手順書（関連: verify_pull_logs.py ／ 設計たたき台 v2 ／ ナレッジ外だし）。AWS/Google の資格情報はスクリプトから読み書きしません。実行は各自の環境で。
+</footer>
+
+</body>
+</html>

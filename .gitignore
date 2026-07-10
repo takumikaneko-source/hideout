@@ -12,7 +12,7 @@ desktop.ini
 PW/
 .env
 .env.local
-*AWS*
+*AWSアカウント*
 *credentials*
 *secret*
 *token*
@@ -20,6 +20,10 @@ PW/
 *.key
 *.pem
 *.bat
+
+# 個人名・顧客データを含む既存ファイル（ユーザー判断で除外・2026-07-10）
+作業履歴/20250918_stgマスタデータ削除②/20250922/
+作業履歴/20250918_stgマスタデータ削除②/*KCPS検証環境顧客営業所マスタ整理*.xlsx
 
 # Temporary & Cache
 tmp/
