@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アラート判定ツール 仕様・運用説明</title>
+<style>
+  :root {
+    --main: #2c5f8a;
+    --bg: #f7f9fb;
+    --text: #333;
+    --border: #d8e0e8;
+    --accent: #c47f1a;
+    --ok: #2e7d5b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Yu Gothic UI", "Meiryo", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.8;
+  }
+  .layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 24px; padding: 24px; }
+  main { flex: 1; min-width: 0; }
+  header.doc-header {
+    background: var(--main); color: #fff; padding: 28px 32px;
+    border-radius: 8px; margin-bottom: 24px;
+  }
+  header.doc-header h1 { font-size: 1.5rem; }
+  header.doc-header .meta { font-size: 0.85rem; opacity: 0.9; margin-top: 6px; }
+  section {
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    padding: 24px 32px; margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 1.25rem; color: var(--main); border-left: 5px solid var(--main);
+    padding-left: 12px; margin-bottom: 16px;
+  }
+  h3 { font-size: 1.05rem; color: var(--main); margin: 20px 0 8px; }
+  p { margin-bottom: 12px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #eef3f8; }
+  code {
+    background: #eef1f4; padding: 2px 6px; border-radius: 4px;
+    font-family: Consolas, monospace; font-size: 0.9em;
+  }
+  pre {
+    background: #2d3339; color: #e8ecef; padding: 14px 18px; border-radius: 6px;
+    overflow-x: auto; margin: 12px 0; font-size: 0.86rem; line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  ul, ol { padding-left: 24px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+
+  .callout {
+    border-left: 4px solid var(--accent); background: #fdf6ec;
+    padding: 12px 16px; border-radius: 4px; margin: 14px 0; font-size: 0.92rem;
+  }
+  .callout.ok { border-color: var(--ok); background: #eef7f2; }
+  .callout .tag { font-weight: bold; color: var(--accent); }
+  .callout.ok .tag { color: var(--ok); }
+  .fig { text-align: center; margin: 16px 0; overflow-x: auto; }
+  .fig svg { max-width: 100%; height: auto; }
+  .fig figcaption { font-size: 0.82rem; color: #666; margin-top: 6px; }
+  .pill {
+    display: inline-block; font-size: 0.78rem; padding: 1px 8px; border-radius: 10px;
+    background: #eef3f8; color: var(--main); border: 1px solid var(--border);
+  }
+
+  nav.toc { width: 240px; flex-shrink: 0; }
+  nav.toc .toc-inner {
+    position: sticky; top: 24px; background: #fff; border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; font-size: 0.85rem;
+    max-height: calc(100vh - 48px); overflow-y: auto;
+  }
+  nav.toc .toc-title { font-weight: bold; color: var(--main); margin-bottom: 8px; }
+  nav.toc a {
+    display: block; color: var(--text); text-decoration: none;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  nav.toc a.lv3 { padding-left: 20px; font-size: 0.8rem; }
+  nav.toc a:hover { background: #eef3f8; }
+  nav.toc a.active { background: var(--main); color: #fff; }
+
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    nav.toc { width: 100%; order: -1; }
+    nav.toc .toc-inner { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <main>
+    <header class="doc-header">
+      <h1>アラート判定ツール 仕様・運用説明</h1>
+      <div class="meta">2026-07-15 ／ 本人向け・全体像の整理用</div>
+    </header>
+
+    <section id="sec0">
+      <h2>要点（先に結論）</h2>
+      <ul>
+        <li><strong>2つのツールを順に流す</strong>仕組みです。<strong>①ログ収集ツール</strong>（AWSからエラーログを集めてExcelへ転記／AIは使わない）→ <strong>②判定ツール</strong>（集めたログをAIが読み、対応要否・影響度を判定）。</li>
+        <li>AIの判定は<strong>参考情報</strong>で、最終判断は運用チームの目視（Excelの<strong>E列</strong>）で行います。</li>
+        <li>判定は<strong>案B（Opusオーケストレーション）</strong>で動作中。下位モデル（Haiku）が「過去事例・判定基準・システム構成」を読んで要約し、<strong>Opusが要約だけを見て最終判断</strong>します。</li>
+        <li>AIは<strong>サブスク（Claude Code / <code>claude -p</code>）</strong>経由で呼びます。APIキーは不要で、使用枠を消費します。</li>
+        <li>AI判定と運用判断の<strong>差分は別ファイル</strong>（<code>AI判定_運用差分記録.xlsx</code>）に蓄積し、ナレッジ改善に使います。</li>
+        <li><strong>AWSの資格情報はAIに一切渡しません。</strong> AWS接続を伴うログ収集はAIを使わず、判定ツールは「集めたログ本文」だけを読みます。</li>
+      </ul>
+    </section>
+
+    <section id="sec1">
+      <h2>1. このツールは何か</h2>
+
+      <h3 id="sec1-1">1-1. 解決したいこと</h3>
+      <p>CloudWatch のエラーアラートが Slack に通知され、スプレッドシートに集計されます。従来はその一件ごとに、担当者が CloudWatch のログを見に行き「対応が要るのか／静観でよいのか」を判断していました。この<strong>ログ収集と一次判断を半自動化</strong>し、運用チームは要点を確認して最終判断に集中できるようにするのが目的です。</p>
+
+      <h3 id="sec1-2">1-2. 全体の流れ</h3>
+      <div class="fig">
+        <svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="全体の流れ">
+          <defs>
+            <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#2c5f8a"></path>
+            </marker>
+          </defs>
+          <!-- boxes -->
+          <rect x="10" y="70" width="150" height="60" rx="6" fill="#eef3f8" stroke="#2c5f8a"></rect>
+          <text x="85" y="95" text-anchor="middle" font-size="12" fill="#333">Slackアラート</text>
+          <text x="85" y="112" text-anchor="middle" font-size="12" fill="#333">集計xlsx</text>
+
+          <rect x="210" y="60" width="160" height="80" rx="6" fill="#2c5f8a"></rect>
+          <text x="290" y="88" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="bold">①ログ収集ツール</text>
+          <text x="290" y="107" text-anchor="middle" font-size="11" fill="#dce7f2">AWSへ接続 / AI不使用</text>
+          <text x="290" y="123" text-anchor="middle" font-size="11" fill="#dce7f2">D列にログ転記</text>
+
+          <rect x="420" y="70" width="150" height="60" rx="6" fill="#eef3f8" stroke="#2c5f8a"></rect>
+          <text x="495" y="95" text-anchor="middle" font-size="12" fill="#333">ログ転記済み</text>
+          <text x="495" y="112" text-anchor="middle" font-size="12" fill="#333">xlsx</text>
+
+          <rect x="620" y="60" width="160" height="80" rx="6" fill="#2c5f8a"></rect>
+          <text x="700" y="88" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="bold">②判定ツール</text>
+          <text x="700" y="107" text-anchor="middle" font-size="11" fill="#dce7f2">AIが判定 / AWS不使用</text>
+          <text x="700" y="123" text-anchor="middle" font-size="11" fill="#dce7f2">G〜K列に出力</text>
+
+          <rect x="800" y="70" width="90" height="60" rx="6" fill="#eef7f2" stroke="#2e7d5b"></rect>
+          <text x="845" y="92" text-anchor="middle" font-size="11.5" fill="#2e7d5b" font-weight="bold">運用チーム</text>
+          <text x="845" y="110" text-anchor="middle" font-size="11" fill="#2e7d5b">目視・E列</text>
+
+          <!-- arrows -->
+          <line x1="160" y1="100" x2="206" y2="100" stroke="#2c5f8a" stroke-width="2" marker-end="url(#ar)"></line>
+          <line x1="370" y1="100" x2="416" y2="100" stroke="#2c5f8a" stroke-width="2" marker-end="url(#ar)"></line>
+          <line x1="570" y1="100" x2="616" y2="100" stroke="#2c5f8a" stroke-width="2" marker-end="url(#ar)"></line>
+          <line x1="780" y1="100" x2="797" y2="100" stroke="#2c5f8a" stroke-width="2" marker-end="url(#ar)"></line>
+
+          <!-- diff record -->
+          <rect x="620" y="165" width="200" height="34" rx="6" fill="#fdf6ec" stroke="#c47f1a"></rect>
+          <text x="720" y="187" text-anchor="middle" font-size="11" fill="#7a5410">差分記録xlsx（改善用・永続）</text>
+          <line x1="700" y1="140" x2="700" y2="163" stroke="#c47f1a" stroke-width="1.5" marker-end="url(#ar)" stroke-dasharray="3 3"></line>
+        </svg>
+        <figcaption>①で集めたログを②が判定し、運用チームが最終判断。判定と運用判断の差分は別ファイルへ蓄積。</figcaption>
+      </div>
+
+      <h3 id="sec1-3">1-3. 2つのツールの役割分担</h3>
+      <table>
+        <tr><th>観点</th><th>①ログ収集ツール</th><th>②判定ツール</th></tr>
+        <tr><td>本体ファイル</td><td><code>collect_logs.py</code></td><td><code>judge_logs.py</code></td></tr>
+        <tr><td>やること</td><td>CloudWatch から該当時刻のエラーログを取得し Excel の D列へ転記</td><td>D列のログを読み、対応要否・影響度を判定して G〜K列へ書き込み</td></tr>
+        <tr><td>AI</td><td><strong>使わない</strong>（機械的処理のみ）</td><td><strong>使う</strong>（Claude）</td></tr>
+        <tr><td>AWS接続</td><td><strong>する</strong>（スイッチロール・MFA）</td><td><strong>しない</strong></td></tr>
+        <tr><td>実行者</td><td>AWSに接続できる運用担当者</td><td>誰でも可（サブスク認証があれば）</td></tr>
+      </table>
+    </section>
+
+    <section id="sec2">
+      <h2>2. データの形（Excelの列）</h2>
+      <p>1枚のスプレッドシート（月ごとにシート、例 <code>2026-07</code>）を、両ツールが列を分担して埋めていきます。</p>
+      <table>
+        <tr><th>列</th><th>見出し</th><th>内容</th><th>書く人</th></tr>
+        <tr><td>A</td><td>タイムゾーン日付</td><td>アラート発生日</td><td>集計（元データ）</td></tr>
+        <tr><td>B</td><td>ALARM</td><td>アラーム名（例 <code>strike-prd-app-log-errors-alarm</code>）</td><td>集計（元データ）</td></tr>
+        <tr><td>C</td><td>TIME</td><td>発生時刻</td><td>集計（元データ）</td></tr>
+        <tr><td>D</td><td>ERRORS</td><td>収集したエラーログ本文</td><td><strong>①収集ツール</strong></td></tr>
+        <tr><td>E</td><td>対応要不要</td><td><strong>運用チームの最終判断</strong>（ツールは触らない）</td><td><strong>運用チーム</strong></td></tr>
+        <tr><td>F</td><td>（リンク）</td><td>元ログ（CloudWatch）への参照リンク</td><td><strong>①収集ツール</strong></td></tr>
+        <tr><td>G</td><td>AI対応要否</td><td>要 / 静観 / 不要</td><td><strong>②判定ツール</strong></td></tr>
+        <tr><td>H</td><td>AI影響度</td><td>大 / 中 / 小</td><td><strong>②判定ツール</strong></td></tr>
+        <tr><td>I</td><td>AI判定理由</td><td>結論・根拠・確認事項・前後関係</td><td><strong>②判定ツール</strong></td></tr>
+        <tr><td>J</td><td>AI確信度</td><td>高 / 中 / 低</td><td><strong>②判定ツール</strong></td></tr>
+        <tr><td>K</td><td>判定方式</td><td>どのモデル・経路で判定したか</td><td><strong>②判定ツール</strong></td></tr>
+      </table>
+      <div class="callout"><span class="tag">ポイント</span> E列（運用チームの最終判断）はツールが絶対に上書きしません。AIの結果はあくまで G〜K の参考欄です。</div>
+    </section>
+
+    <section id="sec3">
+      <h2>3. ①ログ収集ツール</h2>
+
+      <h3 id="sec3-1">3-1. 何をするか</h3>
+      <p>スプレッドシートの各行について、アラーム名からAWSプロファイル（スイッチロール先）を判定し、C列の時刻の前後（既定±5分）に出たエラーログを CloudWatch から取得して D列に転記します。あわせて元ログへのリンクを F列に書きます。入力ファイルは変更せず、コピーを作ってそこに書き込みます。</p>
+
+      <h3 id="sec3-2">3-2. 処理する行の条件</h3>
+      <p>次の条件を<strong>すべて</strong>満たす行だけを処理します。</p>
+      <ul>
+        <li>A列（日時）とB列（アラーム名）がある</li>
+        <li><strong>D列（ログ）が空</strong> ＝ まだ収集していない行</li>
+      </ul>
+      <div class="callout"><span class="tag">よくある誤解</span> 「一部の行しか処理されない」ときは、たいてい<strong>D列が既に埋まっている</strong>のが原因です。再収集したい行は、入力ファイルの<strong>D列を空</strong>にしてから実行してください（G列など他の列は収集ツールの対象判定に関係しません）。</div>
+
+      <h3 id="sec3-3">3-3. D列に転記されるログの形</h3>
+      <p>後工程（AI判定・目視）が原因をすぐ読めるよう、<strong>発火した行（[ERROR]等）を先頭に再掲</strong>し、その後に前後の文脈を並べます。1行が長すぎる（巨大JSON等）場合は途中で切り、全文は F列のリンクから追えます。</p>
+      <pre><code>■ 発火した行（アラームの検知パターンに一致）:
+&gt;&gt;&gt; [10:03:11] [ERROR] Task exception was never retrieved ...
+
+── 前後の文脈（前30行 / 後40行。全文は F列リンク参照）──
+    [10:03:10] post_cloud_taxi_s3_f1 : S3登録OK (HTTPStatusCode 200)
+&gt;&gt;&gt; [10:03:11] [ERROR] Task exception was never retrieved ...
+    [10:03:12] 次サイクル処理を継続 ...</code></pre>
+
+      <h3 id="sec3-4">3-4. 主な設定（<code>settings.py</code>）</h3>
+      <table>
+        <tr><th>項目</th><th>意味</th><th>既定</th></tr>
+        <tr><td><code>INPUT_XLSX</code></td><td>ダウンロードした集計xlsxのパス</td><td>INPUTフォルダ配下</td></tr>
+        <tr><td><code>PREFIX_TO_PROFILE</code></td><td>アラーム名の接頭辞→AWSプロファイル対応表</td><td>strike/duel/aegis/blitz/buster</td></tr>
+        <tr><td><code>SHEET_NAME</code></td><td>対象シート（空＝当月を自動選択）</td><td>空</td></tr>
+        <tr><td><code>WINDOW_MIN</code></td><td>時刻の前後 何分を検索するか</td><td>5</td></tr>
+        <tr><td><code>LINES_BEFORE / AFTER</code></td><td>発火行の前後 何行を文脈に含めるか</td><td>30 / 40</td></tr>
+        <tr><td><code>MAX_ROWS</code></td><td>1回で処理する最大行数（0＝制限なし）</td><td>0</td></tr>
+      </table>
+      <div class="callout"><span class="tag">補足</span> アラーム発火に対しログが見つからないことが多い場合は <code>WINDOW_MIN</code> を 10〜15 に広げると拾いやすくなります。</div>
+
+      <h3 id="sec3-5">3-5. AWS接続とセキュリティ</h3>
+      <p>このツールだけが AWS に接続します（スイッチロール・MFA）。<strong>AWSの資格情報（アクセスキー・MFA等）はAIに渡しません。</strong> 収集はAIを使わない機械的処理で、AIが関わるのは次の②判定ツールだけです。</p>
+    </section>
+
+    <section id="sec4">
+      <h2>4. ②判定ツール</h2>
+
+      <h3 id="sec4-1">4-1. 判定の流れ（1行ごと）</h3>
+      <p>対象は「D列にログがあり（<code>【取得できず】</code>を除く）、G列が空」の行です。各行を次の順で処理します。</p>
+      <ol>
+        <li><strong>機械判定（<code>rules.yaml</code>）</strong>：明確なパターンはAIを使わず即断（費用ゼロ）。</li>
+        <li><strong>類似事例検索（<code>cases.jsonl</code>）</strong>：過去の似た事例を機械的に探して材料にする。</li>
+        <li><strong>AI判定</strong>：ナレッジと類似事例をもとに、対応要否・影響度・理由・確信度を出す。</li>
+        <li><strong>（案Aのみ）確信度が低い場合</strong>：複数観点で再判定し多数決、割れたら上位モデルで最終判定。</li>
+      </ol>
+
+      <h3 id="sec4-2">4-2. 案B オーケストレーション（現在の方式）</h3>
+      <p>「読む・要約する」作業は下位モデル（Haiku）に任せ、<strong>Opusは要約だけを見て判断に専念</strong>します。大きなナレッジ本文を毎回Opusに読ませない分、判断の質を保ちつつ役割を分けています。</p>
+      <div class="fig">
+        <svg viewBox="0 0 860 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="案Bオーケストレーション">
+          <defs>
+            <marker id="ar2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#2c5f8a"></path>
+            </marker>
+          </defs>
+          <rect x="330" y="10" width="200" height="42" rx="6" fill="#eef3f8" stroke="#2c5f8a"></rect>
+          <text x="430" y="30" text-anchor="middle" font-size="12" fill="#333">対象ログ ＋ ナレッジ4種</text>
+          <text x="430" y="46" text-anchor="middle" font-size="11" fill="#666">rules / cases / guidelines / system_context</text>
+
+          <!-- workers -->
+          <rect x="40" y="95" width="220" height="66" rx="6" fill="#fff" stroke="#c47f1a"></rect>
+          <text x="150" y="118" text-anchor="middle" font-size="12" fill="#7a5410" font-weight="bold">作業者1（Haiku）</text>
+          <text x="150" y="136" text-anchor="middle" font-size="11" fill="#333">過去事例の傾向を要約</text>
+
+          <rect x="320" y="95" width="220" height="66" rx="6" fill="#fff" stroke="#c47f1a"></rect>
+          <text x="430" y="118" text-anchor="middle" font-size="12" fill="#7a5410" font-weight="bold">作業者2（Haiku）</text>
+          <text x="430" y="136" text-anchor="middle" font-size="11" fill="#333">判定基準の該当部を抽出</text>
+
+          <rect x="600" y="95" width="220" height="66" rx="6" fill="#fff" stroke="#c47f1a"></rect>
+          <text x="710" y="118" text-anchor="middle" font-size="12" fill="#7a5410" font-weight="bold">作業者3（Haiku）</text>
+          <text x="710" y="136" text-anchor="middle" font-size="11" fill="#333">構成上の前後関係を要約</text>
+
+          <!-- opus -->
+          <rect x="300" y="195" width="260" height="46" rx="6" fill="#2c5f8a"></rect>
+          <text x="430" y="216" text-anchor="middle" font-size="12.5" fill="#fff" font-weight="bold">指揮官 Opus（判断のみ）</text>
+          <text x="430" y="233" text-anchor="middle" font-size="11" fill="#dce7f2">要約を読んで 対応要否・影響度・理由 を確定</text>
+
+          <line x1="430" y1="52" x2="150" y2="93" stroke="#2c5f8a" stroke-width="1.5" marker-end="url(#ar2)"></line>
+          <line x1="430" y1="52" x2="430" y2="93" stroke="#2c5f8a" stroke-width="1.5" marker-end="url(#ar2)"></line>
+          <line x1="430" y1="52" x2="710" y2="93" stroke="#2c5f8a" stroke-width="1.5" marker-end="url(#ar2)"></line>
+          <line x1="150" y1="161" x2="360" y2="193" stroke="#2c5f8a" stroke-width="1.5" marker-end="url(#ar2)"></line>
+          <line x1="430" y1="161" x2="430" y2="193" stroke="#2c5f8a" stroke-width="1.5" marker-end="url(#ar2)"></line>
+          <line x1="710" y1="161" x2="500" y2="193" stroke="#2c5f8a" stroke-width="1.5" marker-end="url(#ar2)"></line>
+        </svg>
+        <figcaption>Haiku が3方向から材料を要約し、Opus が要約だけを見て最終判断する。K列（判定方式）に「AI指揮:opus/作業:haiku」と記録される。</figcaption>
+      </div>
+
+      <h3 id="sec4-3">4-3. 使うナレッジ4ファイル</h3>
+      <table>
+        <tr><th>ファイル</th><th>役割</th><th>使い方</th></tr>
+        <tr><td><code>rules.yaml</code></td><td>機械判定ルール</td><td>明確なパターンをAI前に即断（3件）</td></tr>
+        <tr><td><code>cases.jsonl</code></td><td>過去事例（193件）</td><td>類似事例を検索し判断材料に</td></tr>
+        <tr><td><code>guidelines.md</code></td><td>判定基準</td><td>静観/対応要の条件・影響度の目安</td></tr>
+        <tr><td><code>system_context.md</code></td><td>システム背景</td><td>処理フローと影響の伝播（上流起因・下流波及）</td></tr>
+      </table>
+
+      <h3 id="sec4-4">4-4. 出力される理由（I列）の体裁</h3>
+      <p>理由は読みやすいよう、ブロックごとに空行で区切り、1文ごとに改行します。</p>
+      <pre><code>【結論】ログ欠落のため断定できず静観とします。
+
+【根拠】過去5事例は対応不要でした。
+本件はログが無く両立します。
+当該Lambdaはトリガー未発火の可能性が残ります。
+
+【確認事項】Invocationsが0でないか目視で確認してください。
+
+【前後関係】下流波及は限定的。
+次サイクルで自然回復し得る。</code></pre>
+
+      <h3 id="sec4-5">4-5. バックエンド（AIの呼び出し先）</h3>
+      <table>
+        <tr><th>設定</th><th>内容</th><th>費用</th></tr>
+        <tr><td><code>claude_code</code> <span class="pill">現在これ</span></td><td>Claude Code のサブスク（<code>claude -p</code>）。事前に <code>claude</code> でログイン。</td><td>APIキー不要。プランの使用枠を消費。</td></tr>
+        <tr><td><code>api</code></td><td>Anthropic API。環境変数 <code>ANTHROPIC_API_KEY</code> が必要。</td><td>従量課金。</td></tr>
+      </table>
+
+      <h3 id="sec4-6">4-6. 主な設定（<code>settings.py</code>）</h3>
+      <table>
+        <tr><th>項目</th><th>意味</th><th>既定</th></tr>
+        <tr><td><code>BACKEND</code></td><td>AIの呼び出し先</td><td>claude_code</td></tr>
+        <tr><td><code>JUDGE_MODE</code></td><td>判定方式（orchestration＝案B / pipeline＝案A）</td><td>orchestration</td></tr>
+        <tr><td><code>MODEL_WORKER / ORCHESTRATOR</code></td><td>作業者／指揮官のモデル</td><td>haiku / opus</td></tr>
+        <tr><td><code>MAX_LOG_CHARS</code></td><td>AIに渡すログ本文の最大文字数</td><td>6000</td></tr>
+        <tr><td><code>MAX_ROWS</code></td><td>1回で処理する最大行数</td><td>5（試験用）</td></tr>
+        <tr><td><code>RE_JUDGE</code></td><td>判定済み（G列あり）も再判定するか</td><td>False</td></tr>
+      </table>
+    </section>
+
+    <section id="sec5">
+      <h2>5. 判定差分の記録（改善サイクル）</h2>
+      <p>判定済みエクセルは実行のたびに入力から<strong>作り直される（洗い替え）</strong>ため、AI判定と運用判断の差分は<strong>別の永続ファイル</strong> <code>AI判定_運用差分記録.xlsx</code> に蓄積します。実行のたびに「日付＋アラーム名＋時刻」をキーにして更新追記（upsert）し、運用チームが記入した列は保持します。</p>
+      <table>
+        <tr><th>列</th><th>内容</th><th>記入</th></tr>
+        <tr><td>日付 / アラーム名 / 時刻</td><td>行を特定するキー</td><td>自動</td></tr>
+        <tr><td>AI対応要否 / 影響度 / 確信度 / 判定日時</td><td>判定ツールの出力</td><td>自動（毎回更新）</td></tr>
+        <tr><td>運用対応要否</td><td>運用チームの最終判断</td><td><strong>運用チーム</strong></td></tr>
+        <tr><td>差分</td><td>AIと運用が一致か差分か</td><td>自動（数式）</td></tr>
+        <tr><td>差分理由・改善メモ</td><td>なぜ判断が分かれたか</td><td><strong>運用チーム</strong></td></tr>
+      </table>
+      <div class="callout ok"><span class="tag">狙い</span> 「運用対応要否」を入れると「差分」列が自動で <strong>一致／差分</strong> を表示します。差分の理由を見直して <code>rules.yaml</code> や <code>cases.jsonl</code> を育てることで、判定精度を継続的に上げていきます。</div>
+    </section>
+
+    <section id="sec6">
+      <h2>6. 運用手順（通し）</h2>
+      <ol>
+        <li><strong>準備（初回）</strong>：各ツールで <code>pip install -r requirements.txt</code>。判定ツールは <code>claude</code> にログイン。</li>
+        <li><strong>①収集</strong>：集計xlsxをダウンロードして INPUT に置き、<code>settings.py</code> を確認して <code>collect_logs.py</code> を実行（AWS接続あり）。</li>
+        <li><strong>②判定</strong>：まず <code>MAX_ROWS</code> を小さくして <code>judge_logs.py</code> を試し、問題なければ広げる。</li>
+        <li><strong>③最終判断</strong>：判定済みxlsxの G〜K を参考に、運用チームが E列に最終判断を記入。</li>
+        <li><strong>④改善</strong>：差分記録xlsxに運用判断と理由を記入し、差分をナレッジ更新に反映。</li>
+      </ol>
+      <div class="callout"><span class="tag">注意</span> 実行時は対象のExcelファイルを閉じてください。開いたままだと書き込みに失敗します。</div>
+    </section>
+
+    <section id="sec7">
+      <h2>7. 費用と性能の目安</h2>
+      <p>案B・サブスク経由での実測は、<strong>5行で約$2相当・1行あたり約105秒</strong>でした。全312行なら約$120・約9時間が目安です。</p>
+      <div class="callout"><span class="tag">なぜ費用がかかるか</span> 費用の主因はログの長さよりも、<code>claude -p</code> の<strong>1回ごとに再作成される約2万トークンの土台コンテキスト</strong>です。案Bは1行につきAIを4回呼ぶため、呼び出し回数が費用を大きく左右します。軽くしたい場合は案A（1行1回）へ切り替えると概ね1/4程度になります（精度は案Bより落ちます）。</p></div>
+    </section>
+
+    <section id="sec8">
+      <h2>8. セキュリティ上の決まり</h2>
+      <ul>
+        <li><strong>AWSの資格情報（アクセスキー・MFA等）はAIに渡さない・読み込ませない。</strong></li>
+        <li>AWS接続を伴うログ収集は<strong>AIを使わない</strong>。判定ツールが読むのは「収集済みのログ本文」だけ。</li>
+        <li>APIキーはソースに書かず、環境変数のみ（サブスク運用ならキー自体が不要）。</li>
+        <li>資料・記録には個人名を残さず、「運用チーム／関係者」等に置き換える。</li>
+      </ul>
+    </section>
+
+    <section id="sec9">
+      <h2>9. 配布セットの構成</h2>
+      <p>他の人へ渡せるよう、必要なものを1フォルダに集約しています。相対パスはフォルダ基準で解決されるため、フォルダごと移動しても動きます。</p>
+      <pre><code>配布セット/
+├─ はじめにお読みください.md
+├─ 1_ログ収集ツール/  (collect_logs.py, settings.py, requirements.txt, 手順書.html, INPUT/, OUTPUT/)
+└─ 2_判定ツール/      (judge_logs.py, settings.py, requirements.txt, README.md, ナレッジ/, OUTPUT/)</code></pre>
+      <p>各ツールは <code>settings.py</code> だけを編集すれば動き、本体（*.py）の変更は不要です。</p>
+    </section>
+
+  </main>
+
+  <nav class="toc">
+    <div class="toc-inner">
+      <div class="toc-title">目次</div>
+    </div>
+  </nav>
+</div>
+
+<script>
+(function () {
+  var tocInner = document.querySelector('.toc-inner');
+  var headings = document.querySelectorAll('main h2, main h3');
+  var links = [];
+  headings.forEach(function (h, i) {
+    var target = h.closest('section');
+    var id = h.tagName === 'H2' ? (target ? target.id : '') : h.id;
+    if (!id) { id = 'h-' + i; h.id = id; }
+    var a = document.createElement('a');
+    a.href = '#' + id;
+    a.textContent = h.textContent;
+    if (h.tagName === 'H3') a.className = 'lv3';
+    tocInner.appendChild(a);
+    links.push({ link: a, heading: h });
+  });
+  function highlight() {
+    var current = null;
+    links.forEach(function (item) {
+      var rect = item.heading.getBoundingClientRect();
+      if (rect.top <= 100) current = item;
+    });
+    links.forEach(function (item) {
+      item.link.classList.toggle('active', item === current);
+    });
+  }
+  window.addEventListener('scroll', highlight, { passive: true });
+  highlight();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アラートログ判定ツール 現状説明</title>
+<style>
+  :root {
+    --main: #2c5f8a;
+    --bg: #f7f9fb;
+    --text: #333;
+    --border: #d8e0e8;
+    --accent: #eef3f8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Yu Gothic UI", "Meiryo", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.8;
+  }
+  .layout {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 24px;
+    padding: 24px;
+  }
+  main { flex: 1; min-width: 0; }
+  header.doc-header {
+    background: var(--main);
+    color: #fff;
+    padding: 28px 32px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+  }
+  header.doc-header h1 { font-size: 1.5rem; }
+  header.doc-header .meta { font-size: 0.85rem; opacity: 0.85; margin-top: 6px; }
+  section {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 32px;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 1.25rem;
+    color: var(--main);
+    border-left: 5px solid var(--main);
+    padding-left: 12px;
+    margin-bottom: 16px;
+  }
+  h3 {
+    font-size: 1.05rem;
+    color: var(--main);
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 12px; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    font-size: 0.92rem;
+  }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--accent); white-space: nowrap; }
+  code {
+    background: #eef1f4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 0.9em;
+  }
+  ul, ol { padding-left: 24px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+
+  /* 処理フロー図 */
+  .flow { margin: 16px 0; }
+  .flow-step {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .flow-no {
+    flex-shrink: 0;
+    width: 34px;
+    background: var(--main);
+    color: #fff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+  .flow-no.gray { background: #8898a8; }
+  .flow-body {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    background: var(--accent);
+  }
+  .flow-body.ai { background: #fdf6ec; border-color: #e8d8bc; }
+  .flow-body b { color: var(--main); }
+  .flow-arrow { text-align: center; color: #8898a8; font-size: 0.85rem; margin: 0 0 4px 46px; text-align: left; }
+  .note {
+    background: #fdf6ec;
+    border: 1px solid #e8d8bc;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 0.92rem;
+  }
+  .ok { color: #2c7a4b; font-weight: bold; }
+  .pending { color: #b0752c; font-weight: bold; }
+
+  /* 右側追従目次 */
+  nav.toc { width: 230px; flex-shrink: 0; }
+  nav.toc .toc-inner {
+    position: sticky;
+    top: 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 0.85rem;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  nav.toc .toc-title { font-weight: bold; color: var(--main); margin-bottom: 8px; }
+  nav.toc a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  nav.toc a.lv3 { padding-left: 20px; font-size: 0.8rem; }
+  nav.toc a:hover { background: var(--accent); }
+  nav.toc a.active { background: var(--main); color: #fff; }
+
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    nav.toc { width: 100%; order: -1; }
+    nav.toc .toc-inner { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <main>
+    <header class="doc-header">
+      <h1>アラートログ判定ツール 現状説明</h1>
+      <div class="meta">2026-07-13 ／ エラーログの一次判定（対応要否・影響度）をAIで支援するツールの構造・考え方・現状</div>
+    </header>
+
+    <div style="background:#eef3f8;border:1px solid #2c5f8a;border-radius:8px;padding:18px 24px;margin-bottom:20px;">
+      <div style="font-weight:bold;color:#2c5f8a;font-size:1.1rem;margin-bottom:8px;">要点</div>
+      <ul style="margin:0;">
+        <li><b>目的</b>… 日次のエラー確認における一次判定（対応要否・影響度）をAIで支援する。最終判断は従来どおり運用チームの目視</li>
+        <li><b>現状</b>… 判定に使うナレッジの整備とツール実装は完了。AIの実呼び出しはAPIキー入手待ち（費用は月1,000〜2,000円規模の見込み）</li>
+        <li><b>本日の論点</b>… ① 利用するAIサービス（Claude直接／AWS Bedrock経由／他社）　② 判定方式（案A 固定／案B Opus指揮）</li>
+      </ul>
+    </div>
+
+    <section id="sec1">
+      <h2>1. 背景と位置づけ</h2>
+      <p>人手で行っているAWSアラート対応の自動化は、次の4フェーズで進めています。本資料はフェーズ3（判定）の現状説明です。</p>
+      <table>
+        <tr><th>フェーズ</th><th>内容</th><th>状態</th></tr>
+        <tr><td>1. 収集</td><td>Slack通知アラートをスプレッドシートへ自動記録</td><td class="ok">稼働中</td></tr>
+        <tr><td>2. ログ転記</td><td>CloudWatchからエラーログ本文を取得しD列へ転記（AI不使用）</td><td class="ok">配布済み・稼働可</td></tr>
+        <tr><td>3. 判定（本ツール）</td><td>取得済みログの対応要否・影響度をAIで一次判定</td><td class="pending">実装済み・実測待ち</td></tr>
+        <tr><td>4. 月次集計</td><td>判定結果の集計</td><td>未着手</td></tr>
+      </table>
+      <p>目的は、日次のエラー報告確認における「このエラーは対応が要るのか」の一次判定を自動化し、運用チームの負担を下げることです。<b>最終判断（E列への記入）は従来どおり運用チームの目視</b>で行い、ツールの判定はその参考情報という位置づけです。</p>
+    </section>
+
+    <section id="sec2">
+      <h2>2. 全体像</h2>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-no gray">入</div><div class="flow-body">ログ転記済みスプレッドシート（A=日付 / B=アラーム名 / C=時刻 / D=エラーログ / E=対応要不要(運用チーム記入欄) / F=リンク）</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="flow-no">判</div><div class="flow-body"><b>判定ツール（judge_logs.py）</b>… 1行ずつ判定し、コピーしたファイルのG〜K列に結果を書き込む（入力ファイルとE列には触れない）</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="flow-no gray">出</div><div class="flow-body">判定済みファイル（G=AI対応要否 / H=AI影響度 / I=判定理由 / J=確信度 / K=判定方式）</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="flow-no gray">人</div><div class="flow-body"><b>運用チームの目視</b>… AI判定を参考にE列（対応要不要）を最終判断</div></div>
+      </div>
+    </section>
+
+    <section id="sec3">
+      <h2>3. 判定の考え方</h2>
+
+      <h3 id="sec3-1">3-1. 機械で決められるものはAIを使わない</h3>
+      <p>「答えが決まっている・何度も出るパターン」はルール（rules.yaml）で機械的に即断します。機械判定は費用ゼロで、同じ入力に必ず同じ結果を返します。AIを使うのはルールで断定できない残りだけです。運用が続いてルールが増えるほど、AIに回る件数と費用は減っていきます。</p>
+
+      <h3 id="sec3-2">3-2. 確信度に応じて判定を厚くする</h3>
+      <p>すべての件に重い判定を行うのではなく、AIが「確信度が低い」と自己申告した件だけ、複数の観点で判定し直します。会議で挙がった案の採用状況は次のとおりです。</p>
+      <table>
+        <tr><th>会議で挙がった案</th><th>採用状況</th><th>実装内容</th></tr>
+        <tr><td>複数のペルソナで判定</td><td class="ok">採用</td><td>確信度が低い件のみ、3つの観点（業務影響／復旧・再処理／事例照合）で再判定し多数決</td></tr>
+        <tr><td>モデルの段階利用</td><td class="ok">採用</td><td>本判定=Sonnet（速い・安い）、最終判定のみOpus（高精度）</td></tr>
+        <tr><td>読む情報が増えることへの対策</td><td class="ok">方式を変えて採用</td><td>AIに渡すのは類似する上位5件だけなので、AIの読取量（＝費用・処理時間の主因）はデータ量に関係なく一定。5件を選ぶ検索処理自体はデータ量に比例するが実測で軽微（3-3参照）</td></tr>
+        <tr><td>AIが処理全体を指揮する構成<br>（Opusオーケストレーション）</td><td>選択肢として整理</td><td>既定は再現性・費用の観点で固定手順（下記の案A）。ただし柔軟性を重視する案として別途整理した（<a href="#sec3-4">3-4で案A・案Bを比較</a>）</td></tr>
+      </table>
+
+      <h3 id="sec3-3">3-3. 費用・処理時間が累積で増えない設計</h3>
+      <ul>
+        <li>過去事例は検索で絞ってから渡すため、事例が何倍に増えても<b>AIに渡す量（＝費用）は変わらない</b></li>
+        <li>毎回同じ内容（判定基準・システム背景 約1.1万トークン）はキャッシュが効き、2件目以降は約1/10の価格になる</li>
+        <li>確定したパターンをルールへ昇格させるほど機械判定（費用ゼロ）の割合が増える。<b>長期的には1件あたりの平均費用はむしろ下がる方向</b></li>
+      </ul>
+      <div class="note">
+        <b>補足: 「事例から5件を選ぶ検索」はデータ量に比例するのでは？</b><br>
+        そのとおりで、検索処理自体は事例件数に比例します。ただし元データを最適化して、この懸念は実質解消しています。Backlogの生データ1,907件は「同じアラームの重複」が大半だったため、<b>判定パターンごとに代表例へ集約（1,907件→約190件）</b>しました。発生回数は保持しているので情報は落ちていません。結果、検索は現状で1件あたり1ミリ秒未満です。1件の判定を左右するのはAIの応答時間（1回あたり数秒）で、検索はその1割にも満たないため、事例が増えてもボトルネックにはなりません。
+        <table style="margin-top:8px">
+          <tr><th>検索対象</th><th>1行あたりの検索時間</th><th>AI呼び出し1回との比</th></tr>
+          <tr><td>約190件（集約後・現状）</td><td>約0.7 ミリ秒</td><td>AIの約0.03%</td></tr>
+          <tr><td>（参考）集約前 1,907件</td><td>約3 ミリ秒</td><td>AIの約0.1%未満</td></tr>
+          <tr><td>（参考）95,000件相当・数十年分</td><td>約250 ミリ秒</td><td>AIの約1/10以下</td></tr>
+        </table>
+        新しいアラームが増えても、判定パターン（アラーム×対応要否）の種類は限られるため、集約後の件数は緩やかにしか増えません。
+      </div>
+
+      <h3 id="sec3-4">3-4. 判定方式のアーキテクチャ（Opusオーケストレーション案の比較）</h3>
+      <p>判定の進め方には大きく2つの方式があります。現行は案A、ご要望のOpusオーケストレーションは案Bです。<b>いずれも同じナレッジ4ファイルを使うため、後から方式を切り替えられます</b>。</p>
+
+      <p><b>案A: 固定パイプライン（現行）</b><br>
+      機械照合→類似検索→Sonnet判定→（曖昧なら）多観点→Opus、という順序をプログラムで固定する。処理の主役はプログラムで、AIは各ステップで呼ばれる。</p>
+
+      <svg viewBox="0 0 720 120" style="width:100%;max-width:720px;height:auto;display:block;margin:12px auto;" xmlns="http://www.w3.org/2000/svg" font-family="'Yu Gothic UI','Meiryo',sans-serif">
+        <defs><marker id="arA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#6b7c8c"/></marker></defs>
+        <rect x="8" y="40" width="60" height="44" rx="6" fill="#eceff2" stroke="#8898a8"/>
+        <text x="38" y="67" font-size="13" text-anchor="middle" fill="#333">ログ</text>
+        <rect x="92" y="34" width="128" height="56" rx="6" fill="#eef3f8" stroke="#2c5f8a"/>
+        <text x="156" y="59" font-size="12.5" text-anchor="middle" fill="#2c5f8a">機械判定</text>
+        <text x="156" y="77" font-size="11" text-anchor="middle" fill="#555">ルール・類似検索</text>
+        <rect x="244" y="34" width="120" height="56" rx="6" fill="#fdf6ec" stroke="#d98c3f"/>
+        <text x="304" y="59" font-size="12.5" text-anchor="middle" fill="#b0752c">AI判定</text>
+        <text x="304" y="77" font-size="11" text-anchor="middle" fill="#555">Sonnet</text>
+        <rect x="388" y="34" width="176" height="56" rx="6" fill="#fdf6ec" stroke="#d98c3f" stroke-dasharray="5 3"/>
+        <text x="476" y="57" font-size="11.5" text-anchor="middle" fill="#b0752c">確信度が低い時だけ</text>
+        <text x="476" y="75" font-size="12" text-anchor="middle" fill="#555">多観点 → Opus</text>
+        <rect x="588" y="40" width="120" height="44" rx="6" fill="#eceff2" stroke="#8898a8"/>
+        <text x="648" y="67" font-size="12.5" text-anchor="middle" fill="#333">結果(JSON)</text>
+        <g stroke="#6b7c8c" stroke-width="1.6" marker-end="url(#arA)" fill="none">
+          <line x1="68" y1="62" x2="90" y2="62"/>
+          <line x1="220" y1="62" x2="242" y2="62"/>
+          <line x1="364" y1="62" x2="386" y2="62"/>
+          <line x1="564" y1="62" x2="586" y2="62"/>
+        </g>
+        <text x="360" y="110" font-size="11" text-anchor="middle" fill="#888">処理順序はプログラムで固定。AIは各ステップで呼ばれる（凡例: 灰=データ / 青=機械処理 / 橙=AI）</text>
+      </svg>
+
+      <p><b>案B: Opusオーケストレーション（指揮官＋作業者）</b><br>
+      <b>Opusは「判断」だけを担う指揮官</b>で、実際の作業——ルール照合、類似事例の検索・要約、判定基準の読取・要約、システム構成の読取・要約——は<b>下位モデル（Haiku／Sonnet）が作業者として行う</b>。下位モデルが読み取って要約した結果をOpusが受け取り、それをもとに最終判定する。高価なOpusは判断だけに使い、量の多い読取・要約は安いモデルに任せるので、全部をOpusにやらせるより費用を抑えられる。技術的にはローカルのファイルを参照するだけで実現でき、AWSに接続しない現行方針とも両立する。（確定パターンのルール照合は機械処理のままにすれば、その工程はAI費用ゼロにできる）</p>
+
+      <svg viewBox="0 0 720 340" style="width:100%;max-width:720px;height:auto;display:block;margin:12px auto;" xmlns="http://www.w3.org/2000/svg" font-family="'Yu Gothic UI','Meiryo',sans-serif">
+        <defs>
+          <marker id="arB" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#6b7c8c"/></marker>
+          <marker id="biBs" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6 Z" fill="#c8792b"/></marker>
+          <marker id="biBe" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c8792b"/></marker>
+        </defs>
+        <!-- top row: log, Opus, result -->
+        <rect x="8" y="26" width="54" height="44" rx="6" fill="#eceff2" stroke="#8898a8"/>
+        <text x="35" y="53" font-size="13" text-anchor="middle" fill="#333">ログ</text>
+        <rect x="86" y="14" width="384" height="70" rx="8" fill="#f7e4cf" stroke="#c8792b" stroke-width="2"/>
+        <text x="278" y="43" font-size="15" font-weight="bold" text-anchor="middle" fill="#a5641f">Opus … 判断（オーケストレーター）</text>
+        <text x="278" y="64" font-size="11" text-anchor="middle" fill="#7a5220">各工程を下位モデルに指示し、返ってきた要約で最終判定する</text>
+        <rect x="584" y="26" width="128" height="44" rx="6" fill="#eceff2" stroke="#8898a8"/>
+        <text x="648" y="53" font-size="12.5" text-anchor="middle" fill="#333">判定結果(JSON)</text>
+        <g stroke="#6b7c8c" stroke-width="1.6" fill="none" marker-end="url(#arB)">
+          <line x1="62" y1="48" x2="84" y2="48"/>
+          <line x1="470" y1="48" x2="582" y2="48"/>
+        </g>
+        <!-- middle row: worker models (Haiku/Sonnet) -->
+        <g>
+          <rect x="14" y="150" width="200" height="64" rx="6" fill="#fdf6ec" stroke="#d98c3f"/>
+          <text x="114" y="173" font-size="10.5" text-anchor="middle" fill="#b0752c">下位モデル（Haiku／Sonnet）</text>
+          <text x="114" y="197" font-size="12.5" text-anchor="middle" fill="#555">照合（ルール・類似事例）</text>
+          <rect x="260" y="150" width="200" height="64" rx="6" fill="#fdf6ec" stroke="#d98c3f"/>
+          <text x="360" y="173" font-size="10.5" text-anchor="middle" fill="#b0752c">下位モデル（Haiku／Sonnet）</text>
+          <text x="360" y="197" font-size="12.5" text-anchor="middle" fill="#555">判定基準を読む・要約</text>
+          <rect x="506" y="150" width="200" height="64" rx="6" fill="#fdf6ec" stroke="#d98c3f"/>
+          <text x="606" y="173" font-size="10.5" text-anchor="middle" fill="#b0752c">下位モデル（Haiku／Sonnet）</text>
+          <text x="606" y="197" font-size="12.5" text-anchor="middle" fill="#555">システム構成を読む・要約</text>
+        </g>
+        <!-- Opus <-> workers (指示 / 要約) -->
+        <g stroke="#c8792b" stroke-width="1.5" fill="none" marker-start="url(#biBs)" marker-end="url(#biBe)">
+          <line x1="170" y1="84" x2="114" y2="149"/>
+          <line x1="300" y1="84" x2="360" y2="149"/>
+          <line x1="430" y1="84" x2="606" y2="149"/>
+        </g>
+        <text x="360" y="118" font-size="11" text-anchor="middle" fill="#c8792b">指示 ⇅ 要約を返す</text>
+        <!-- bottom row: knowledge files -->
+        <g>
+          <rect x="14" y="252" width="200" height="42" rx="6" fill="#eef3f8" stroke="#2c5f8a"/>
+          <text x="114" y="278" font-size="11.5" text-anchor="middle" fill="#2c5f8a">rules.yaml ／ cases.jsonl</text>
+          <rect x="260" y="252" width="200" height="42" rx="6" fill="#eef3f8" stroke="#2c5f8a"/>
+          <text x="360" y="278" font-size="11.5" text-anchor="middle" fill="#2c5f8a">guidelines.md</text>
+          <rect x="506" y="252" width="200" height="42" rx="6" fill="#eef3f8" stroke="#2c5f8a"/>
+          <text x="606" y="278" font-size="11.5" text-anchor="middle" fill="#2c5f8a">system_context.md</text>
+        </g>
+        <g stroke="#6b7c8c" stroke-width="1.4" fill="none" marker-end="url(#arB)">
+          <line x1="114" y1="214" x2="114" y2="250"/>
+          <line x1="360" y1="214" x2="360" y2="250"/>
+          <line x1="606" y1="214" x2="606" y2="250"/>
+        </g>
+        <text x="360" y="326" font-size="11" text-anchor="middle" fill="#888">Opusは判断だけ。照合・読取・要約は下位モデル(Haiku/Sonnet)が担当し、Opusはその要約で最終判定する</text>
+      </svg>
+
+      <table>
+        <tr><th>比較の観点</th><th>案A 固定パイプライン<br>（現行）</th><th>案B Opusオーケストレーション</th></tr>
+        <tr><td>再現性・監査性<br>（なぜこう判定したか）</td><td class="ok">高い（同じ入力→同じ経路・結果）</td><td>中程度（工程は決まっており、Opusの判断がAIなので多少ばらつく）</td></tr>
+        <tr><td>柔軟性（新種・難件への強さ）</td><td>手順が固定で、想定外に硬い面がある</td><td class="ok">高い（Opusが必要な工程を選んで深掘りできる）</td></tr>
+        <tr><td>費用（1件あたり・概算）</td><td class="ok">約1〜2円</td><td>約5〜15円（Opusは判断のみ・読取は下位モデル。全部Opusより安い）</td></tr>
+        <tr><td>処理速度</td><td class="ok">速い（大半はSonnet1回）</td><td>遅い（1件で複数回のやり取り）</td></tr>
+        <tr><td>運用チームへの説明しやすさ</td><td class="ok">しやすい（手順が固定）</td><td>やや難しい</td></tr>
+        <tr><td>実装の手間</td><td class="ok">実装済み</td><td>作り直しが必要</td></tr>
+      </table>
+
+      <div class="note">
+        <b>月額の概算（1日20件と仮定）</b>
+        <table style="margin-top:8px">
+          <tr><th>方式</th><th>月額の目安</th></tr>
+          <tr><td>案A 固定（現行）</td><td>約1,000〜2,000円</td></tr>
+          <tr><td>案B Opusオーケストレーション（Opus判断＋下位モデル作業・全件）</td><td>約3,000〜9,000円</td></tr>
+        </table>
+        ※ 正確な費用は件数・実際のやり取り回数で変動するため、実測で確認が必要です。
+      </div>
+
+      <p><b>考え方の提案:</b> 運用ツールとして重視されるのは<b>再現性・監査性・費用</b>であり、その点で既定は案A（現行）を推します。案B（Opus判断＋下位モデル作業）は柔軟性・品質の上限が高い一方、全件に適用すると費用と処理時間が案Aの数倍になります。まず案Aで実証し、判定品質が課題になった場合に案Bへの切り替えを検討する形を提案します（いずれも同じナレッジ4ファイルを使うため後から切り替え可能）。</p>
+    </section>
+
+    <section id="sec4">
+      <h2>4. 処理順序（1行ごと）</h2>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-no">1</div><div class="flow-body"><b>ルール照合（機械・費用ゼロ）</b>… rules.yaml の確定パターンに一致すれば即断して終了。例: テスト乗務員コード999999は取り込み不要</div></div>
+        <div class="flow-arrow">↓ 一致しない場合</div>
+        <div class="flow-step"><div class="flow-no">2</div><div class="flow-body"><b>類似事例の検索（機械）</b>… 集約済みの判定パターン（約190件）から、同一アラーム・エラー内容の近い上位5件を選ぶ</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><div class="flow-no">3</div><div class="flow-body ai"><b>AI本判定（Sonnet）</b>… 判定基準＋システム背景＋対象ログ＋類似事例をもとに、対応要否・影響度・理由・確信度を判定（回答形式はJSONで固定）</div></div>
+        <div class="flow-arrow">↓ 確信度「低」の場合のみ</div>
+        <div class="flow-step"><div class="flow-no">4</div><div class="flow-body ai"><b>多観点判定（Sonnet×3観点）</b>… 「業務影響」「復旧・再処理」「事例照合」の3つの観点で判定し直し、2観点以上が一致すればその判定を採用（影響度は重い方＝安全側）</div></div>
+        <div class="flow-arrow">↓ 3観点の判定が割れた場合のみ</div>
+        <div class="flow-step"><div class="flow-no">5</div><div class="flow-body ai"><b>最終判定（Opus）</b>… 割れた観点別の判定内容も渡した上で、上位モデルが最終判定</div></div>
+      </div>
+      <p>どの経路で判定されたかはK列（判定方式）に記録されるため、後から「機械判定だったのか、多観点まで行ったのか」を追跡できます。確信度が高い大半の件はステップ3の1回で終わるため、費用が増えるのは曖昧な件だけです。</p>
+    </section>
+
+    <section id="sec5">
+      <h2>5. 判定を支えるナレッジ（4ファイル）</h2>
+      <p>判定の精度はツール本体ではなく、外部ファイル化した4つのナレッジで決まります。ナレッジはツールと独立に更新できます。</p>
+      <table>
+        <tr><th>ファイル</th><th>役割</th><th>作り方・出典</th></tr>
+        <tr><td>rules.yaml</td><td>機械判定ルール（AI不使用）</td><td>運用手順書の確定パターンから3件登録。誤発動を防ぐ条件（文脈限定の正規表現）を検証済み</td></tr>
+        <tr><td>cases.jsonl</td><td>過去の判定事例（生データ1,907件を判定パターンへ集約した約190件）</td><td>Backlogの運用チケットから機械抽出。個人名は自動除去済み。判定理由のコメントが判定材料になる。集約時に発生回数を保持し頻度情報も残す</td></tr>
+        <tr><td>guidelines.md</td><td>判定基準</td><td>運用チームの手順書（日次監視手順・ERROR対応例）を整理。静観してよい条件・エスカレーション条件など</td></tr>
+        <tr><td>system_context.md</td><td>システム背景</td><td>taxi-cloudの実際の構成定義（template.yml）を調査して裏取りした処理フローと影響伝播</td></tr>
+      </table>
+
+      <h3 id="sec5-1">5-1. エラーの「前後関係」まで判定できるようにした</h3>
+      <p>system_context.md には、エラー箇所の上流・下流を推論するための処理フロー知識を入れています。実際の構成定義を調査して裏取りしたものです。例:</p>
+      <ul>
+        <li><b>上流起因の見分け</b>… S3の404エラーは前段のファイル配置処理の失敗を疑う。マスタ連携は毎分の差分連携なので一時エラーは次サイクルで自然回復しやすい</li>
+        <li><b>下流への波及</b>… 初期設定マスタの登録失敗は、後続の履歴更新→マート更新まで4段のチェーンが不発になる</li>
+        <li><b>同時多発の説明</b>… 1つの連携ファイルを3つの処理が並列に読むため、3系統のアラームが同時に鳴ったら共通の入力ファイル1つが原因の可能性が高い</li>
+        <li><b>アラームの重みの違い</b>… 多くは「エラー1件で発報」だが、一部は「1時間に3件以上で発報」「注意レベルでも発報」など感度が異なる。同じ1回の発報でも意味が違う</li>
+      </ul>
+
+      <h3 id="sec5-2">5-2. ナレッジの育て方</h3>
+      <ol>
+        <li>運用チームの目視結果とAI判定のズレを記録する（突合）</li>
+        <li>ズレの原因になった判断基準を guidelines.md に追記する</li>
+        <li>何度も出る確定パターンは rules.yaml へ昇格させる（以後は機械判定・費用ゼロ）</li>
+      </ol>
+      <p>この繰り返しで、AIの出番が減りながら精度が上がる構造になっています。</p>
+    </section>
+
+    <section id="sec6">
+      <h2>6. モデル選定・代替案・費用</h2>
+
+      <h3 id="sec6-1">6-1. Claudeは必須ではない</h3>
+      <p>結論として、<b>このツールはClaudeでなければ動かないものではありません</b>。判定を支える仕組み（ルール／過去事例／判定基準／システム背景の4ファイルと、機械照合→類似検索→AI判定という処理順序）はAIサービスに依存しない共通部分で、実際にAIへ問い合わせる箇所だけが差し替え対象です。現状Claudeを既定にしているのは、開発環境がClaudeであること・日本語と判断の品質・回答形式の固定（JSON）やキャッシュ機能が使えることによる実務上の理由で、他社サービスでも同等のことは可能です。乗り換えは呼び出し部分の差し替えで対応でき、<b>特定ベンダーに固定していないため今日決め打ちする必要はありません</b>（差し替え作業の目安: 数時間〜1日程度）。</p>
+
+      <h3 id="sec6-2">6-2. 現実的な選択肢</h3>
+      <table>
+        <tr><th>選択肢</th><th>概要</th><th>この案件での向き</th><th>注意点</th></tr>
+        <tr>
+          <td><b>Claude API（直接）</b><br>＝現行</td>
+          <td>Anthropicと直接契約。従量課金・前払いクレジット方式</td>
+          <td>品質は高い。すぐ始められる</td>
+          <td>Anthropicとの別契約と前払いが要る</td>
+        </tr>
+        <tr>
+          <td><b>Claude（AWS Bedrock経由）</b></td>
+          <td>同じClaudeをAWS経由で呼ぶ。請求は<b>既存のAWS利用料に合算</b>（前払い不要）。データもAWS内で完結</td>
+          <td class="ok">AWS中心の当社に最も合う。前払い・別契約の課題が解消</td>
+          <td>判定ツールがAWSに接続する形になり、「実行時はAWSに触れない」という現在の切り分けは崩れる（方針判断が必要）</td>
+        </tr>
+        <tr>
+          <td><b>OpenAI（GPT系）</b></td>
+          <td>他社の同等クラスのAI。回答形式の固定・キャッシュも利用可</td>
+          <td>品質はClaudeと同等クラス</td>
+          <td>別契約・前払いが要る。乗り換えは呼び出し部の差し替えで可能</td>
+        </tr>
+        <tr>
+          <td><b>Google Gemini</b></td>
+          <td>他社の同等クラスのAI。当社は既にGoogle（ドライブ・GAS）を利用中。軽量モデルは特に安価</td>
+          <td>Google利用が既にあるため契約の敷居が低い。費用も抑えやすい</td>
+          <td>Google Cloud側でのAPI有効化が要る。乗り換えは呼び出し部の差し替えで可能</td>
+        </tr>
+        <tr>
+          <td><b>自前・社内でAIを動かす</b><br>（ローカルモデル）</td>
+          <td>外部サービスを使わず、社内サーバ等でオープンなAIモデルを動かす。データが外に出ない</td>
+          <td>今回の規模（日次20件程度）には不向き</td>
+          <td>GPUサーバの用意と運用負担が大きく、判定品質も外部サービスに劣りやすい。費用より手間が上回る</td>
+        </tr>
+        <tr>
+          <td><b>AIを使わない</b><br>（ルールのみ）</td>
+          <td>rules.yamlの機械判定だけで運用。費用ゼロ・確実</td>
+          <td>初期の実証や、確定パターンの自動化には有効</td>
+          <td>曖昧な判定（本来AIに任せたい部分）はできない。単独では目的を満たさない</td>
+        </tr>
+      </table>
+
+      <h3 id="sec6-3">6-3. 費用</h3>
+      <table>
+        <tr><th>項目</th><th>内容</th></tr>
+        <tr><td>課金方式</td><td>いずれの外部AIも従量課金（使ったトークン分のみ）。Bedrock経由なら前払い不要でAWS利用料に合算</td></tr>
+        <tr><td>1件あたり</td><td>約1〜2円（Claudeの中位モデル・キャッシュ利用時の目安）。確信度が低く多観点判定まで行った件のみ3〜5倍</td></tr>
+        <tr><td>月額の目安</td><td>1日20件 × 30日 = 600件として、おおよそ1,000〜2,000円程度</td></tr>
+        <tr><td>他社との比較</td><td>OpenAIはおおむね同程度、Geminiの軽量モデルはより安い傾向（※正確な単価はサービスにより変動するため、選定時に最新料金の確認が必要）</td></tr>
+        <tr><td>圧縮の仕組み</td><td>毎回同じ判定基準・システム背景はキャッシュで約1/10価格。機械判定・類似検索は費用ゼロ。ルールが増えるほど平均費用は下がる</td></tr>
+      </table>
+      <p>いずれの選択肢でも月額のオーダーは数百円〜数千円で、サービス間の差より「どの契約・請求経路が当社に合うか」の方が判断材料として大きいと考えます。実行のたびにトークン使用量が表示されるため、実測で確認しながら運用できます。</p>
+
+      <h3 id="sec6-4">6-4. 進め方の提案</h3>
+      <ol>
+        <li><b>短期（実証）</b>… まずルール判定＋Claudeの少量実行で、判定品質と実費用を実測する。乗り換えは後からでも呼び出し部の差し替えで済むため、この段階でベンダーを確定させる必要はない</li>
+        <li><b>中期（本運用の方針決め）</b>… 当社のAWS・Google利用状況を踏まえ、請求経路と契約のしやすさで選ぶ。AWSに寄せるなら<b>Bedrock経由のClaude</b>が前払い・別契約の課題を解消できて有力。Google利用を活かすならGeminiも現実的</li>
+      </ol>
+    </section>
+
+    <section id="sec7">
+      <h2>7. 安全のための設計</h2>
+      <ul>
+        <li><b>AWSには一切アクセスしない</b>… このツールが触るのはxlsxファイル・ナレッジファイル・Claude APIのみ。AWS資格情報をAIに渡さない方針を維持</li>
+        <li><b>APIキーはソースに書かない</b>… 環境変数からのみ読み込む。資料・ソース・リポジトリにキーは含めない</li>
+        <li><b>入力ファイルは変更しない</b>… コピーを作って書き込む。出力先が入力と同じ場合は中止</li>
+        <li><b>E列（運用チームの判断欄）には触れない</b>… 書き込みはG〜K列のみ。想定外の列使用を検知したら上書きせず中止</li>
+        <li><b>暴走防止</b>… 1回の実行は既定200行まで。無限ループなし。判定済みの行は再実行時にスキップ（途中で止めても続きから再開できる）</li>
+      </ul>
+    </section>
+
+    <section id="sec8">
+      <h2>8. 現状と今後</h2>
+
+      <h3 id="sec8-1">8-1. 完了していること</h3>
+      <ul>
+        <li>ナレッジ4ファイルの作成（事例1,907件の抽出・個人名除去・判定パターンへの集約、判定基準の整理、システム背景の裏取り）</li>
+        <li>判定ツール本体の実装（機械判定→類似検索→AI判定→多観点→最終判定）</li>
+        <li>機械処理部分の動作確認… 実データで判定対象312行の検出・類似検索・出力生成まで確認済み。多数決ロジックは単体テスト済み</li>
+      </ul>
+
+      <h3 id="sec8-2">8-2. 残っていること</h3>
+      <table>
+        <tr><th>項目</th><th>内容</th><th>状態</th></tr>
+        <tr><td>AI実呼び出しの確認</td><td>APIキー入手後、数行の小規模実行で判定品質と費用を実測</td><td class="pending">キー申請中</td></tr>
+        <tr><td>精度の突合</td><td>運用チームの目視結果とAI判定を突き合わせ、基準を調整（試行期間の設定を相談したい）</td><td>未着手</td></tr>
+        <tr><td>ルールの拡充</td><td>突合で確定したパターンを rules.yaml へ昇格</td><td>継続的に実施</td></tr>
+      </table>
+
+      <h3 id="sec8-3">8-3. 調査で見つかった確認事項（運用チーム・開発チーム向け）</h3>
+      <p>システム背景の裏取り調査の副産物として、次の疑問点が見つかっています。</p>
+      <ul>
+        <li>初期設定マスタ登録のアラームが、エラーではなく<b>情報レベルのログで発報する設定</b>になっている（取得側は エラーレベル）。意図的か設定漏れか。このアラームが発報件数の上位にいる一因の可能性がある</li>
+        <li>キューの再試行設定（何回・何分間隔・失敗後の退避先）の実際の値がリポジトリの構成定義に無く、実環境でしか確認できない</li>
+        <li>失敗メッセージの退避処理が現在トリガー未接続（無効化されたまま）になっている</li>
+      </ul>
+    </section>
+
+    <section id="sec9">
+      <h2>9. 本日確認したいこと</h2>
+      <ol>
+        <li><b>利用するAIサービスの方針</b>… Claude直接 / AWS Bedrock経由 / 他社（Gemini等）のいずれで進めるか（6章参照）。まずは実証のため少額（$5〜）で開始し、本運用の経路は追って決める形でよいか</li>
+        <li><b>判定方式（アーキテクチャ）</b>… 案A 固定パイプライン（現行）／案B Opusオーケストレーションのいずれで進めるか（3-4参照）。提案は「まず案Aで実証し、判定品質が課題になれば案Bを検討」</li>
+        <li><b>突合の進め方</b>… 試行期間（例: 2〜4週間）、日次の判定結果を誰がどう確認するか</li>
+        <li><b>判定結果の記録場所</b>… 判定済みファイルのG〜K列という形でよいか、既存シートへの反映方法の希望はあるか</li>
+        <li><b>8-3の確認事項</b>… 特に情報レベルで発報しているアラームの扱い（修正するなら発報件数が減る見込み）</li>
+      </ol>
+    </section>
+  </main>
+
+  <nav class="toc">
+    <div class="toc-inner">
+      <div class="toc-title">目次</div>
+      <!-- 目次は h2/h3 から自動生成 -->
+    </div>
+  </nav>
+</div>
+
+<script>
+// 見出し(h2/h3)から目次を自動生成し、スクロールに応じて現在地をハイライトする
+(function () {
+  var tocInner = document.querySelector('.toc-inner');
+  var headings = document.querySelectorAll('main h2, main h3');
+  var links = [];
+
+  headings.forEach(function (h, i) {
+    var target = h.closest('section');
+    var id = h.tagName === 'H2' ? (target ? target.id : '') : h.id;
+    if (!id) { id = 'h-' + i; h.id = id; }
+    var a = document.createElement('a');
+    a.href = '#' + id;
+    a.textContent = h.textContent;
+    if (h.tagName === 'H3') a.className = 'lv3';
+    tocInner.appendChild(a);
+    links.push({ link: a, heading: h });
+  });
+
+  function highlight() {
+    var current = null;
+    links.forEach(function (item) {
+      var rect = item.heading.getBoundingClientRect();
+      if (rect.top <= 100) current = item;
+    });
+    links.forEach(function (item) {
+      item.link.classList.toggle('active', item === current);
+    });
+  }
+
+  window.addEventListener('scroll', highlight, { passive: true });
+  highlight();
+})();
+</script>
+</body>
+</html>
