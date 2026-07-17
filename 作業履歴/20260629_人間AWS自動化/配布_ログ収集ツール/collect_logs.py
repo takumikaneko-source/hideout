@@ -39,8 +39,10 @@ SHEET_NAME = ""
 OUTPUT_DIR = ""
 OUTPUT_XLSX = ""
 REGION = "ap-northeast-1"
-LINES_BEFORE = 100
-LINES_AFTER = 100
+LINES_BEFORE = 40          # 発火行の前の文脈行数（控えめに。全文は F列リンクで見られる）
+LINES_AFTER = 40           # 発火行の後の文脈行数
+ERROR_HEADER_MAX = 8       # D列の先頭に再掲する「発火した行」の最大件数
+LINE_MAX_CHARS = 800       # 1行が長すぎる（巨大JSON等）ときの1行あたり上限文字数
 WINDOW_MIN = 5
 MAX_ROWS = 0
 PREFIX_TO_PROFILE = {}
@@ -56,7 +58,8 @@ try:
     import settings as _s
     # settings.py に書かれている項目だけを、上の既定値に上書きする
     for _k in ("INPUT_XLSX", "SHEET_NAME", "OUTPUT_DIR", "OUTPUT_XLSX", "REGION",
-               "LINES_BEFORE", "LINES_AFTER", "WINDOW_MIN", "MAX_ROWS",
+               "LINES_BEFORE", "LINES_AFTER", "ERROR_HEADER_MAX", "LINE_MAX_CHARS",
+               "WINDOW_MIN", "MAX_ROWS",
                "PREFIX_TO_PROFILE", "DEFAULT_PROFILE", "CA_BUNDLE"):
         if hasattr(_s, _k):
             globals()[_k] = getattr(_s, _k)
@@ -219,8 +222,10 @@ def fetch_logs(logs, log_group, filter_pattern, center_utc):
     戻り値は4つ組: (ログ本文, リンク用の情報, 該当件数, 統計情報)。
       ・該当するログが1件も無いときは、ログ本文の代わりに None を返す。
     処理の流れ:
-      1) 対象時刻の前後 WINDOW_MIN 分を検索し、最初に一致したログを見つける。
-      2) そのログが在るログストリームを開き、一致箇所の前 LINES_BEFORE 行〜後 LINES_AFTER 行を抜き出す。
+      1) 対象時刻の前後 WINDOW_MIN 分を検索し、一致したログ（発火行）を見つける。
+      2) D列本文は「発火した行を先頭に再掲」→「前後の文脈（控えめ）」の順に組み立てる。
+         こうすると、長いログでも先頭に必ず発火行が残り、後工程（AI判定・人の目視）が
+         『何で鳴ったか』を確実に読める。全文は F列リンクから参照する。
       3) 一致した行の先頭には ">>> " の印を付けて分かりやすくする。
     """
     # 検索する時間の範囲（対象時刻の前後 WINDOW_MIN 分）
@@ -262,18 +267,33 @@ def fetch_logs(logs, log_group, filter_pattern, center_utc):
             idx = i
             break
 
-    # 基点の前 LINES_BEFORE 行〜後 LINES_AFTER 行だけを切り出す
+    # 基点の前 LINES_BEFORE 行〜後 LINES_AFTER 行だけを切り出す（前後の文脈）
     lo = max(0, idx - LINES_BEFORE)
     hi = min(len(stream_events), idx + LINES_AFTER + 1)
     stat["extracted"] = hi - lo
 
-    # 1行ずつ「[時刻] 本文」に整形。基点の行だけ先頭に ">>> " を付ける
-    lines = []
+    def _fmt(e, mark="    "):
+        """1件を「[時刻] 本文」に整形。1行が長すぎる（巨大JSON等）ときは切る。"""
+        msg = e["message"].rstrip()
+        if len(msg) > LINE_MAX_CHARS:
+            msg = msg[:LINE_MAX_CHARS] + " …(1行が長いため省略)"
+        return f"{mark}[{fmt_ts(e['timestamp'])}] {msg}"
+
+    # --- (1) 発火した行を先頭に再掲する ---
+    #   検知パターンに一致した行(events)を先頭にまとめて置く。長いログでD列が切られても、
+    #   『何で鳴ったか』が必ず残るようにするため（後工程のAI判定・人の目視の両方に効く）。
+    header = ["■ 発火した行（アラームの検知パターンに一致）:"]
+    for e in events[:ERROR_HEADER_MAX]:
+        header.append(_fmt(e, ">>> "))
+    if len(events) > ERROR_HEADER_MAX:
+        header.append(f"    （ほか {len(events) - ERROR_HEADER_MAX} 件の一致行あり。全文は F列リンク参照）")
+
+    # --- (2) 前後の文脈（控えめに）---
+    context = [f"── 前後の文脈（前{LINES_BEFORE}行 / 後{LINES_AFTER}行。全文は F列リンク参照）──"]
     for i in range(lo, hi):
-        e = stream_events[i]
-        mark = ">>> " if i == idx else "    "
-        lines.append(f"{mark}[{fmt_ts(e['timestamp'])}] {e['message'].rstrip()}")
-    text = "\n".join(lines)
+        context.append(_fmt(stream_events[i], ">>> " if i == idx else "    "))
+
+    text = "\n".join(header) + "\n\n" + "\n".join(context)
     link = (log_group, stream, ms(start), ms(end))  # F列リンクを組み立てるための材料
     return text, link, len(events), stat
 
