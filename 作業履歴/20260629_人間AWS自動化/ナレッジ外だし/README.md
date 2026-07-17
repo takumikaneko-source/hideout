@@ -20,6 +20,8 @@
 最終確認は運用チームの目視（従来どおり）
 ```
 
+この流れを実装した判定ツール本体は `../判定ツール/` にある（judge_logs.py）。
+
 ## データ源
 
 | 元データ | 場所 | 使いどころ |
@@ -28,25 +30,41 @@
 | 日次監視手順 | `../資料/運用作業手順.xlsx`「暫定 日次監視内容・手順」 | 監視フロー・エスカレーション条件（guidelines.md 補強） |
 | ERROR対応例 | 同上「備忘：ERROR対応例、lambdaの設定確認方法」 | guidelines.md / rules.yaml の主材料 |
 
-## cases.jsonl のスキーマと再生成
+## cases.jsonl の作られ方（2段パイプライン）
 
-1行1事例のJSON。`build_cases.py` が Backlog CSV（エラーログ種別のみ）から機械生成する。
+Backlogの生CSVは同じアラームの重複が大半（1,907件中ユニークなアラームは86種）。
+そのまま検索対象にすると重複が多く、検索が重く精度も落ちるため、2段で作る。
+
+```
+Backlog CSV
+  └ build_cases.py       → cases_raw.jsonl（全件・約1,900件・個人名除去済み）
+       └ consolidate_cases.py → cases.jsonl（判定用・約190件・集約済み）
+```
+
+- **build_cases.py**: エラーログ種別のみを機械抽出。個人名は氏名辞書で除去、URL・画像参照・挨拶・スケジュール調整文も除去。出力は `cases_raw.jsonl`。
+- **consolidate_cases.py**: (アラーム名 × 対応要否) のパターンごとに、中身のある理由を持つ代表例を最大3件残す。発生回数 `count` を付与するので「このアラームは過去N回出た」という頻度情報は保つ。出力は `cases.jsonl`（判定ツールが読む）。
+
+再生成手順:
+```
+python build_cases.py        # Backlog CSV → cases_raw.jsonl
+python consolidate_cases.py  # cases_raw.jsonl → cases.jsonl
+```
+
+### cases.jsonl のフィールド
 
 | フィールド | 内容 |
 |------------|------|
-| issue_key / created / status | Backlog課題キー・発生日・チケット状態 |
-| service / env / source_type | アラーム名から抽出（aegis〜strike / prd等 / lambda・stepfunctions・ecs） |
 | alarm_name / summary | アラーム名・件名 |
-| error_summary | description 中の最初の [ERROR] 行（200字まで） |
+| service / env / source_type | アラーム名から抽出（aegis〜strike / prd等 / lambda・stepfunctions・ecs） |
+| error_summary | 代表事例の [ERROR] 行（200字まで） |
 | action_hint | 対応要否の**暫定ラベル**（不要/静観/要/要確認）。キーワード推定なので目安 |
-| reason | comments から抽出した判定理由の文（実質の判定信号はこちら） |
+| reason | 判定理由の文（実質の判定信号はこちら） |
 | needs_review | 断定材料が弱く目視確認が要るもの true |
-| source | データ源の識別子 |
+| **count** | このパターン（アラーム×対応要否）の過去発生回数。頻出＝よくあるパターンの手掛かり |
+| first_seen / last_seen | このパターンの発生期間 |
+| issue_key | 代表事例のBacklog課題キー |
 
-再生成: `python build_cases.py`（個人名は氏名辞書で機械除去、URL・画像参照・挨拶やスケジュール調整文も除去）。
-生成後は集計レポート（scratchpad の cases_report.txt）で内訳と個人名残存ゼロを確認する。
-
-**action_hint の注意**: 「クローズ」等の弱い語しかない事例は断定せず needs_review=true になる（2026-07-10 時点で約半数）。
+**action_hint の注意**: 「クローズ」等の弱い語しかない事例は断定せず needs_review=true になる。
 運用チームの目視結果との突合で確定させ、確定したパターンは rules.yaml へ昇格させる。
 
 ## 作り方（大量データでも溢れない手順）
@@ -61,5 +79,6 @@
 ## 注意
 
 - **個人名を含めない**（担当者名・起票者名は cases.jsonl に入れない）
-- 生データそのもの（backlog_issues.csv 等の未加工・個人名入り）はリポジトリにコミットしない。ここに置くのは加工済み・サニタイズ済みの3ファイルとスクリプトのみ
+- 生データそのもの（backlog_issues.csv 等の未加工・個人名入り）はリポジトリにコミットしない
+- `cases_raw.jsonl`（全件・集約前）はサニタイズ済みだがサイズが大きいため、コミットするのは集約後の `cases.jsonl` のみ（raw は build_cases.py でいつでも再生成できる）
 - 判定に使うログ本文はすでに抽出済み（Phase2ツールの成果物）である前提
