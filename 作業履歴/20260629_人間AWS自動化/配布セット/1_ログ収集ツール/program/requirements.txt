@@ -1,0 +1,5 @@
+# ログ収集ツールの依存パッケージ
+# 導入:  pip install -r requirements.txt
+boto3
+openpyxl
+truststore ; python_version >= "3.10"   # 社内TLS検査プロキシ対応（OSの証明書ストアを使う）

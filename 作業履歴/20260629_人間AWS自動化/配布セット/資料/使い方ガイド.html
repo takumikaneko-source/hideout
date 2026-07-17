@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アラート判定ツール 使い方ガイド</title>
+<style>
+  :root { --main:#2c5f8a; --bg:#f7f9fb; --text:#333; --border:#d8e0e8; --accent:#c47f1a; --ok:#2e7d5b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+  body { font-family:"Yu Gothic UI","Meiryo",sans-serif; color:var(--text); background:var(--bg); line-height:1.8; }
+  .layout { display:flex; max-width:1200px; margin:0 auto; gap:24px; padding:24px; }
+  main { flex:1; min-width:0; }
+  header.doc-header { background:var(--main); color:#fff; padding:28px 32px; border-radius:8px; margin-bottom:24px; }
+  header.doc-header h1 { font-size:1.5rem; }
+  header.doc-header .meta { font-size:0.85rem; opacity:0.9; margin-top:6px; }
+  section { background:#fff; border:1px solid var(--border); border-radius:8px; padding:24px 32px; margin-bottom:20px; }
+  h2 { font-size:1.25rem; color:var(--main); border-left:5px solid var(--main); padding-left:12px; margin-bottom:16px; }
+  h3 { font-size:1.05rem; color:var(--main); margin:20px 0 8px; }
+  p { margin-bottom:12px; }
+  table { border-collapse:collapse; width:100%; margin:12px 0; font-size:0.9rem; }
+  th, td { border:1px solid var(--border); padding:8px 12px; text-align:left; vertical-align:top; }
+  th { background:#eef3f8; }
+  code { background:#eef1f4; padding:2px 6px; border-radius:4px; font-family:Consolas,monospace; font-size:0.9em; }
+  pre { background:#2d3339; color:#e8ecef; padding:14px 18px; border-radius:6px; overflow-x:auto; margin:12px 0; font-size:0.86rem; line-height:1.6; }
+  pre code { background:none; padding:0; color:inherit; }
+  ul, ol { padding-left:24px; margin-bottom:12px; }
+  li { margin-bottom:5px; }
+  ol.steps { counter-reset:step; list-style:none; padding-left:0; }
+  ol.steps > li { position:relative; padding:4px 0 12px 44px; margin-bottom:4px; }
+  ol.steps > li::before { counter-increment:step; content:counter(step); position:absolute; left:0; top:2px; width:30px; height:30px; background:var(--main); color:#fff; border-radius:50%; text-align:center; line-height:30px; font-weight:bold; }
+  .callout { border-left:4px solid var(--accent); background:#fdf6ec; padding:12px 16px; border-radius:4px; margin:14px 0; font-size:0.92rem; }
+  .callout.ok { border-color:var(--ok); background:#eef7f2; }
+  .callout .tag { font-weight:bold; color:var(--accent); }
+  .callout.ok .tag { color:var(--ok); }
+  .pill { display:inline-block; font-size:0.78rem; padding:1px 8px; border-radius:10px; background:#eef3f8; color:var(--main); border:1px solid var(--border); }
+  nav.toc { width:240px; flex-shrink:0; }
+  nav.toc .toc-inner { position:sticky; top:24px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:16px; font-size:0.85rem; max-height:calc(100vh - 48px); overflow-y:auto; }
+  nav.toc .toc-title { font-weight:bold; color:var(--main); margin-bottom:8px; }
+  nav.toc a { display:block; color:var(--text); text-decoration:none; padding:3px 8px; border-radius:4px; }
+  nav.toc a.lv3 { padding-left:20px; font-size:0.8rem; }
+  nav.toc a:hover { background:#eef3f8; }
+  nav.toc a.active { background:var(--main); color:#fff; }
+  @media (max-width:900px){ .layout{flex-direction:column;} nav.toc{width:100%; order:-1;} nav.toc .toc-inner{position:static; max-height:none;} }
+</style>
+</head>
+<body>
+<div class="layout">
+  <main>
+    <header class="doc-header">
+      <h1>アラート判定ツール 使い方ガイド</h1>
+      <div class="meta">2026-07-16 ／ 運用担当者向け・操作手順</div>
+    </header>
+
+    <section id="sec0">
+      <h2>クイックスタート</h2>
+      <p>このガイドは <strong>AI判定ツール（②）</strong>の使い方です。入力となる「エラーログ転記済みのxlsx」は、収集ツールで用意済みのものを使います。</p>
+      <ol class="steps">
+        <li><strong>準備</strong>：<code>セットアップ.bat</code> → <code>claude</code> を導入・ログイン → <code>環境チェック.bat</code> で「すべて良好」を確認</li>
+        <li><strong>入力を置く</strong>：ログ転記済みの xlsx を <code>1_ログ収集ツール/OUTPUT/</code> に置く（既定の入力先）</li>
+        <li><strong>判定</strong>：<code>2_判定ツール/判定実行.bat</code> をダブルクリック（まずは <code>MAX_ROWS</code> を小さく）</li>
+        <li><strong>確認</strong>：<code>2_判定ツール/OUTPUT/</code> の判定済みxlsxを見て、E列に最終判断を記入</li>
+      </ol>
+      <div class="callout"><span class="tag">重要</span> AIの判定は参考情報です。最終判断は必ず運用チームの目視（E列）で行ってください。</div>
+    </section>
+
+    <section id="sec1">
+      <h2>1. これは何か</h2>
+      <p>収集済みのエラーログ（Excelの D列）を AI が読み、<strong>対応要否（要 / 静観 / 不要）</strong>と<strong>影響度（大 / 中 / 小）</strong>を判定して、判定済みExcelの G〜K列に書き込むツールです。ログの収集は別のツール（収集ツール）で行い、その出力を入力として使います。</p>
+      <h3 id="sec1-1">1-1. フォルダの見方</h3>
+      <p>作業者が触るのは、判定ツール直下の <strong>判定実行.bat</strong>・<strong>settings.py</strong>・<strong>ナレッジ / OUTPUT</strong> だけです。本体プログラムは <code>program/</code> にまとめてあり、開く必要はありません。</p>
+      <table>
+        <tr><th>場所</th><th>役割</th></tr>
+        <tr><td><code>環境チェック.bat</code> / <code>セットアップ.bat</code></td><td>準備用（点検・依存導入）</td></tr>
+        <tr><td><code>2_判定ツール/判定実行.bat</code></td><td>判定を実行（★これをダブルクリック）</td></tr>
+        <tr><td><code>2_判定ツール/settings.py</code></td><td>設定（ここだけ編集）</td></tr>
+        <tr><td><code>2_判定ツール/ナレッジ/</code></td><td>判定基準・過去事例（正本はGoogleドライブ／後述）</td></tr>
+        <tr><td><code>2_判定ツール/OUTPUT/</code></td><td>判定結果・差分記録が出る</td></tr>
+        <tr><td><code>2_判定ツール/program/</code></td><td>本体・依存・説明（触らない）</td></tr>
+        <tr><td><code>資料/</code></td><td>全体仕様・このガイド</td></tr>
+      </table>
+    </section>
+
+    <section id="sec2">
+      <h2>2. 準備（初回のみ）</h2>
+      <ol class="steps">
+        <li><strong>Python を用意</strong>：<a href="https://www.python.org/">python.org</a> 版を推奨。<span class="pill">注意</span> Microsoft Store 版は不具合が出ることがあります（後述）。</li>
+        <li><strong>依存パッケージを導入</strong>：<code>セットアップ.bat</code> をダブルクリック。</li>
+        <li><strong>Claude CLI を導入してログイン</strong>：
+          <pre><code>npm install -g @anthropic-ai/claude-code
+claude</code></pre>
+          APIキーは不要です。社内プロキシで <code>SELF_SIGNED_CERT_IN_CHAIN</code> が出たら「6. 困ったとき」を参照。</li>
+        <li><strong>点検</strong>：<code>環境チェック.bat</code> を実行し「すべて良好」を確認。足りない物があれば対処が表示されます。</li>
+      </ol>
+      <div class="callout ok"><span class="tag">安全</span> <code>環境チェック.bat</code> は AI も AWS も呼ばず、資格情報も読みません。何度実行しても安全です。</div>
+    </section>
+
+    <section id="sec3">
+      <h2>3. 判定の使い方</h2>
+      <ol class="steps">
+        <li><strong>入力を用意</strong>：エラーログ転記済みの xlsx を <code>1_ログ収集ツール/OUTPUT/</code> に置く（<code>settings.py</code> の <code>INPUT_XLSX</code> が既定でここを指します）。別の場所にあるなら <code>INPUT_XLSX</code> をそのパスに変更。</li>
+        <li><strong>少数で試す</strong>：<code>2_判定ツール/settings.py</code> の <code>MAX_ROWS</code> を <code>5</code> など小さくする。</li>
+        <li><strong>実行</strong>：<code>判定実行.bat</code> をダブルクリック。</li>
+      </ol>
+      <p>処理対象は「D列にログがあり、G列が空」の行です。結果は <code>2_判定ツール/OUTPUT/…_判定済.xlsx</code> の G〜K列に出ます。</p>
+      <div class="callout"><span class="tag">枠の消費に注意</span> 既定は案B（Opusオーケストレーション・サブスク経由）で、1行につきAIを複数回呼びます。件数を増やすときは使用枠と時間に注意してください（目安: 数行で数分・少額）。</div>
+    </section>
+
+    <section id="sec4">
+      <h2>4. 結果の見方</h2>
+      <table>
+        <tr><th>列</th><th>内容</th></tr>
+        <tr><td>G: AI対応要否</td><td>要 / 静観 / 不要</td></tr>
+        <tr><td>H: AI影響度</td><td>大 / 中 / 小</td></tr>
+        <tr><td>I: AI判定理由</td><td>【結論】【根拠】【確認事項】【前後関係】の4段落</td></tr>
+        <tr><td>J: AI確信度</td><td>高 / 中 / 低（材料不足なら低）</td></tr>
+        <tr><td>K: 判定方式</td><td>どのモデル・経路で判定したか</td></tr>
+      </table>
+      <p>理由（I列）は次のように、ブロックごとに空行・1文ごとに改行して読みやすく整形されます。</p>
+      <pre><code>【結論】ログ欠落のため断定できず静観とします。
+
+【根拠】過去5事例は対応不要でした。
+本件はログが無く両立します。
+
+【確認事項】同エラーが連続発報していないか確認してください。
+
+【前後関係】読取APIのため下流波及はなし。</code></pre>
+    </section>
+
+    <section id="sec5">
+      <h2>5. 最終判断と差分の記録</h2>
+      <ul>
+        <li>判定済みファイルの <strong>E列（対応要不要）</strong> に、運用チームが最終判断を記入します（ツールはE列を上書きしません）。</li>
+        <li>AI判定と運用判断の差分は、判定ツールが自動で <code>OUTPUT/AI判定_運用差分記録.xlsx</code> に蓄積します（判定済みファイルは毎回作り直されるため、差分は別ファイルに残します）。</li>
+        <li>差分記録の「運用対応要否」を入れると「差分」列が自動で <strong>一致／差分</strong> を表示します。理由メモを溜めて、ナレッジ（判定基準・事例）の改善に使います。</li>
+      </ul>
+    </section>
+
+    <section id="sec6">
+      <h2>6. 困ったとき</h2>
+      <p>まず <code>環境チェック.bat</code> を実行すると、多くを自動検出して対処を表示します。</p>
+      <table>
+        <tr><th>症状</th><th>原因</th><th>対処</th></tr>
+        <tr><td><code>claude … が見つかりませんでした</code></td><td>Claude CLI 未導入</td><td><code>npm install -g @anthropic-ai/claude-code</code> → <code>claude</code> でログイン</td></tr>
+        <tr><td>npm で <code>SELF_SIGNED_CERT_IN_CHAIN</code></td><td>社内TLS検査プロキシ</td><td>下の「社内証明書」参照</td></tr>
+        <tr><td><code>claude.cmd</code> を「なし」と誤検出</td><td>Microsoft Store 版 Python で AppData が見えない</td><td>python.org 版 / pyenv 版（実体）を使う。<code>判定実行.bat</code> は実体を自動選択します</td></tr>
+        <tr><td>パッケージ未導入エラー</td><td>依存が未インストール</td><td><code>セットアップ.bat</code> を実行</td></tr>
+        <tr><td>保存／書き込みに失敗</td><td>対象 Excel を開いたまま</td><td>その Excel を閉じて再実行</td></tr>
+        <tr><td><code>使用上限</code> で未判定</td><td>サブスクの使用枠上限</td><td>時間をおいて再実行。<code>MAX_ROWS</code> を小さく</td></tr>
+      </table>
+      <h3 id="sec6-1">6-1. 社内証明書（プロキシでSSLエラー）</h3>
+      <p>Windowsの信頼済み証明書を1ファイルに書き出し、npm に渡します（PowerShellで実行）。</p>
+      <pre><code>$out = "$env:USERPROFILE\corp-ca-bundle.pem"
+$certs = Get-ChildItem Cert:\LocalMachine\Root, Cert:\CurrentUser\Root
+$lines = foreach ($c in $certs) { "-----BEGIN CERTIFICATE-----"; [Convert]::ToBase64String($c.RawData,'InsertLineBreaks'); "-----END CERTIFICATE-----" }
+$lines | Set-Content -Encoding ascii $out
+npm config set cafile "$out"</code></pre>
+    </section>
+
+    <section id="sec7">
+      <h2>7. ナレッジの正本（Google ドライブ）</h2>
+      <p>判定に使うナレッジ（<code>rules.yaml</code> / <code>cases.jsonl</code> / <code>guidelines.md</code> / <code>system_context.md</code>）の<strong>正本は Google ドライブ共有フォルダ</strong>です。最新はそこで管理します。判定ツールはオフラインで動くため、各PCではローカルに用意した最新版を <code>settings.py</code> の <code>KNOWLEDGE_DIR</code> で参照させます。</p>
+      <ul>
+        <li><strong>(A) 同期して参照（推奨）</strong>：Google ドライブ デスクトップで共有フォルダを同期し、その同期パスを <code>KNOWLEDGE_DIR</code> に指定。<span class="pill">初期設定</span> Google サインインと共有フォルダの追加という<strong>作業者の操作</strong>が必要です（社内承認が要る場合あり）。</li>
+        <li><strong>(B) 手動ダウンロード</strong>：共有フォルダから4ファイルを <code>2_判定ツール/ナレッジ/</code> に上書き。</li>
+      </ul>
+      <p>同梱の <code>ナレッジ/</code> は初期スナップショット（フォールバック）です。詳しい場所は <code>はじめにお読みください.md</code> に記載しています。</p>
+    </section>
+
+    <section id="sec8">
+      <h2>8. 上級者向け：ターミナルから直接実行</h2>
+      <p>実体の Python が入ったターミナル（PowerShell 等）に慣れている方は、.bat を使わず直接実行してもかまいません。</p>
+      <pre><code>cd 2_判定ツール
+python program\judge_logs.py --help   # 使い方の確認
+python program\judge_logs.py          # 判定を実行</code></pre>
+      <div class="callout"><span class="tag">注意</span> その場合は「実体のPython」であること（Store版でないこと）を自分で担保してください。<code>判定実行.bat</code> は、実体Pythonの自動選択・UTF-8設定・画面保持を代わりに行っています。</div>
+    </section>
+
+  </main>
+  <nav class="toc"><div class="toc-inner"><div class="toc-title">目次</div></div></nav>
+</div>
+<script>
+(function () {
+  var tocInner = document.querySelector('.toc-inner');
+  var headings = document.querySelectorAll('main h2, main h3');
+  var links = [];
+  headings.forEach(function (h, i) {
+    var target = h.closest('section');
+    var id = h.tagName === 'H2' ? (target ? target.id : '') : h.id;
+    if (!id) { id = 'h-' + i; h.id = id; }
+    var a = document.createElement('a');
+    a.href = '#' + id; a.textContent = h.textContent;
+    if (h.tagName === 'H3') a.className = 'lv3';
+    tocInner.appendChild(a); links.push({ link:a, heading:h });
+  });
+  function highlight() {
+    var current = null;
+    links.forEach(function (item) { if (item.heading.getBoundingClientRect().top <= 100) current = item; });
+    links.forEach(function (item) { item.link.classList.toggle('active', item === current); });
+  }
+  window.addEventListener('scroll', highlight, { passive:true }); highlight();
+})();
+</script>
+</body>
+</html>
